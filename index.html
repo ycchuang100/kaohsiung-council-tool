@@ -67,27 +67,47 @@ body{font-family:'Noto Sans TC',sans-serif;background:var(--bg);color:var(--text
 .modal-save-btn:hover{background:var(--red-d)}
 
 /* ── AI MODE SELECTOR ── */
-.ai-mode-panel{background:linear-gradient(135deg,#1a1a2e 0%,#16213e 100%);border-radius:var(--br);padding:14px 18px;margin-bottom:14px;border:1px solid #2a2a4a}
-.ai-mode-title{color:rgba(255,255,255,.6);font-size:11px;letter-spacing:1px;text-transform:uppercase;margin-bottom:10px}
-.ai-mode-row{display:flex;gap:8px;flex-wrap:wrap}
-.ai-chip{display:flex;align-items:center;gap:6px;padding:7px 14px;border-radius:8px;cursor:pointer;transition:all .2s;border:1.5px solid transparent;user-select:none;font-size:12px;font-weight:600}
-.ai-chip-logo{width:20px;height:20px;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;flex-shrink:0}
+.ai-mode-panel{background:linear-gradient(135deg,#1a1a2e 0%,#16213e 100%);border-radius:var(--br);padding:16px 20px;margin-bottom:14px;border:1px solid #2a2a4a}
+.ai-mode-title{color:rgba(255,255,255,.55);font-size:11px;letter-spacing:1px;text-transform:uppercase;margin-bottom:12px;font-weight:600}
+.ai-mode-row{display:flex;gap:10px;flex-wrap:wrap;align-items:stretch}
+.ai-chip{display:flex;align-items:center;gap:9px;padding:9px 16px;border-radius:9px;cursor:pointer;transition:all .2s;border:1.5px solid rgba(255,255,255,.12);user-select:none;background:rgba(255,255,255,.06);min-width:140px}
+.ai-chip:hover:not(.chip-disabled){border-color:rgba(255,255,255,.28);background:rgba(255,255,255,.1)}
+.ai-chip-checkbox{width:17px;height:17px;border-radius:4px;border:2px solid rgba(255,255,255,.3);display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .2s;background:transparent}
+.ai-chip-checkbox .ck{display:none;font-size:11px;font-weight:900;line-height:1}
+.ai-chip-logo{width:22px;height:22px;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff;flex-shrink:0}
 .chip-claude .ai-chip-logo{background:var(--claude)}
 .chip-gemini .ai-chip-logo{background:var(--gemini)}
 .chip-gpt    .ai-chip-logo{background:var(--gpt)}
-.ai-chip.inactive{background:rgba(255,255,255,.07);color:rgba(255,255,255,.45);border-color:rgba(255,255,255,.12)}
-.ai-chip.inactive:hover{background:rgba(255,255,255,.12);color:rgba(255,255,255,.7)}
-.chip-claude.active{background:rgba(181,32,42,.25);color:#ff8a8a;border-color:rgba(181,32,42,.6)}
-.chip-gemini.active{background:rgba(26,115,232,.2);color:#7ab4ff;border-color:rgba(26,115,232,.5)}
-.chip-gpt.active{background:rgba(16,163,127,.2);color:#6be0c8;border-color:rgba(16,163,127,.5)}
-.chip-disabled{opacity:.35;cursor:not-allowed!important;pointer-events:none}
-.ai-chip .chip-label{font-size:12px;font-weight:600}
-.ai-chip .chip-sub{font-size:10px;opacity:.7;margin-left:2px}
-.ai-synth-chip{display:flex;align-items:center;gap:6px;padding:7px 14px;border-radius:8px;cursor:pointer;transition:all .2s;border:1.5px dashed rgba(255,200,50,.3);color:rgba(255,200,50,.55);font-size:12px;font-weight:600;user-select:none}
-.ai-synth-chip.active{background:rgba(255,200,50,.12);color:rgba(255,220,80,.9);border-color:rgba(255,200,50,.6)}
-.ai-synth-chip:hover{background:rgba(255,200,50,.08);color:rgba(255,220,80,.75)}
-.ai-mode-sep{width:1px;background:rgba(255,255,255,.15);margin:0 4px;align-self:stretch}
-.ai-mode-help{color:rgba(255,255,255,.35);font-size:10.5px;margin-top:8px;line-height:1.6}
+.ai-chip-info{display:flex;flex-direction:column;gap:1px}
+.ai-chip .chip-label{font-size:13px;font-weight:600;color:rgba(255,255,255,.5);transition:color .2s}
+.ai-chip .chip-sub{font-size:10px;color:rgba(255,255,255,.28);transition:color .2s}
+.chip-disabled{opacity:.32;cursor:not-allowed!important}
+.chip-disabled .chip-label::after{content:' (未設定金鑰)';font-size:9px;opacity:.7}
+.ai-chip.active .ai-chip-checkbox{border-color:currentColor;background:currentColor}
+.ai-chip.active .ai-chip-checkbox .ck{display:block;color:#fff}
+.chip-claude.active{border-color:rgba(220,80,80,.7);background:rgba(181,32,42,.2)}
+.chip-claude.active .chip-label{color:#ff9090}
+.chip-claude.active .chip-sub{color:rgba(255,144,144,.6)}
+.chip-gemini.active{border-color:rgba(80,150,255,.7);background:rgba(26,115,232,.18)}
+.chip-gemini.active .chip-label{color:#7ab4ff}
+.chip-gemini.active .chip-sub{color:rgba(122,180,255,.6)}
+.chip-gpt.active{border-color:rgba(16,163,127,.7);background:rgba(16,163,127,.18)}
+.chip-gpt.active .chip-label{color:#6be0c8}
+.chip-gpt.active .chip-sub{color:rgba(107,224,200,.6)}
+.ai-mode-divider{display:flex;align-items:center;color:rgba(255,255,255,.18);font-size:18px;padding:0 2px;align-self:center}
+.ai-synth-chip{display:flex;align-items:center;gap:9px;padding:9px 16px;border-radius:9px;cursor:pointer;transition:all .2s;border:1.5px dashed rgba(255,200,50,.25);user-select:none;background:rgba(255,200,50,.04);min-width:190px}
+.ai-synth-chip:hover{border-color:rgba(255,200,50,.5);background:rgba(255,200,50,.09)}
+.ai-synth-checkbox{width:17px;height:17px;border-radius:4px;border:2px solid rgba(255,200,50,.3);display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .2s}
+.ai-synth-checkbox .ck{display:none;font-size:11px;font-weight:900;line-height:1;color:#1a1a2e}
+.ai-synth-chip.active .ai-synth-checkbox{background:#ffd750;border-color:#ffd750}
+.ai-synth-chip.active .ai-synth-checkbox .ck{display:block}
+.ai-synth-icon{font-size:18px;flex-shrink:0}
+.ai-synth-info{display:flex;flex-direction:column;gap:1px}
+.ai-synth-chip .synth-label{font-size:13px;font-weight:600;color:rgba(255,200,50,.55);transition:color .2s}
+.ai-synth-chip .synth-sub{font-size:10px;color:rgba(255,200,50,.32);transition:color .2s}
+.ai-synth-chip.active .synth-label{color:rgba(255,220,80,.95)}
+.ai-synth-chip.active .synth-sub{color:rgba(255,220,80,.6)}
+.ai-mode-help{color:rgba(255,255,255,.3);font-size:10.5px;margin-top:10px;line-height:1.65;border-top:1px solid rgba(255,255,255,.07);padding-top:9px}
 
 /* ── GRID ── */
 .g5{display:grid;grid-template-columns:repeat(5,1fr);gap:11px}
@@ -283,31 +303,49 @@ body{font-family:'Noto Sans TC',sans-serif;background:var(--bg);color:var(--text
 
   <!-- ═══════ AI MODE SELECTOR ═══════ -->
   <div class="ai-mode-panel">
-    <div class="ai-mode-title">🤖 選擇 AI 模型</div>
+    <div class="ai-mode-title">🤖 選擇 AI 模型（可單選或多選，勾選 2 個以上才能啟用智能整合）</div>
     <div class="ai-mode-row" id="aiModeRow">
+
       <div class="ai-chip chip-claude active" id="chip-claude" onclick="toggleChip('claude')">
+        <div class="ai-chip-checkbox" id="ckbox-claude"><span class="ck">✓</span></div>
         <div class="ai-chip-logo">C</div>
-        <span class="chip-label">Claude</span>
-        <span class="chip-sub">Sonnet</span>
+        <div class="ai-chip-info">
+          <span class="chip-label">Claude</span>
+          <span class="chip-sub">Sonnet 4</span>
+        </div>
       </div>
+
       <div class="ai-chip chip-gemini inactive chip-disabled" id="chip-gemini" onclick="toggleChip('gemini')">
+        <div class="ai-chip-checkbox" id="ckbox-gemini"><span class="ck">✓</span></div>
         <div class="ai-chip-logo">G</div>
-        <span class="chip-label">Gemini</span>
-        <span class="chip-sub">2.0 Flash</span>
+        <div class="ai-chip-info">
+          <span class="chip-label">Gemini</span>
+          <span class="chip-sub">2.0 Flash</span>
+        </div>
       </div>
+
       <div class="ai-chip chip-gpt inactive chip-disabled" id="chip-gpt" onclick="toggleChip('gpt')">
+        <div class="ai-chip-checkbox" id="ckbox-gpt"><span class="ck">✓</span></div>
         <div class="ai-chip-logo">⊕</div>
-        <span class="chip-label">ChatGPT</span>
-        <span class="chip-sub">GPT-4o</span>
+        <div class="ai-chip-info">
+          <span class="chip-label">ChatGPT</span>
+          <span class="chip-sub">GPT-4o</span>
+        </div>
       </div>
-      <div class="ai-mode-sep"></div>
+
+      <div class="ai-mode-divider">｜</div>
+
       <div class="ai-synth-chip" id="chip-synth" onclick="toggleSynth()">
-        <span>✨</span>
-        <span class="chip-label">智能整合</span>
-        <span class="chip-sub">多 AI 彙整最佳版本</span>
+        <div class="ai-synth-checkbox" id="ckbox-synth"><span class="ck">✓</span></div>
+        <div class="ai-synth-icon">✨</div>
+        <div class="ai-synth-info">
+          <span class="synth-label">智能整合</span>
+          <span class="synth-sub">需勾選 2 個以上 AI</span>
+        </div>
       </div>
+
     </div>
-    <div class="ai-mode-help" id="aiModeHelp">已選：Claude　｜ 請至右上角「API 金鑰設定」輸入其他 AI 的金鑰以啟用</div>
+    <div class="ai-mode-help" id="aiModeHelp">✦ 單選：僅用該 AI 產稿　｜　多選 + 智能整合：各 AI 獨立撰寫，再由 Claude 彙整最佳版本　｜　請至右上角「⚙️ API 金鑰設定」輸入金鑰以啟用 Gemini / ChatGPT</div>
   </div>
 
   <!-- ═══════ 基本資料 ═══════ -->
@@ -536,7 +574,7 @@ function lsDel(k) { localStorage.removeItem(k); }
 function refreshChipStates() {
   const aiList = ['claude', 'gemini', 'gpt'];
   aiList.forEach(ai => {
-    const hasKey = ai === 'claude' ? true : !!ls('key_' + ai); // claude uses injected key
+    const hasKey = !!ls('key_' + ai);
     const chip = document.getElementById('chip-' + ai);
     if (!hasKey) {
       chip.classList.add('chip-disabled');
@@ -545,8 +583,17 @@ function refreshChipStates() {
       chip.classList.add('inactive');
     } else {
       chip.classList.remove('chip-disabled');
+      // if key just became available and not yet toggled, keep current state
     }
   });
+  // ensure at least claude is active if it has a key
+  if (!Object.values(activeAIs).some(Boolean)) {
+    if (!!ls('key_claude')) {
+      activeAIs.claude = true;
+      const c = document.getElementById('chip-claude');
+      c.classList.add('active'); c.classList.remove('inactive');
+    }
+  }
   updateModeHelp();
 }
 
@@ -554,13 +601,17 @@ function toggleChip(ai) {
   const chip = document.getElementById('chip-' + ai);
   if (chip.classList.contains('chip-disabled')) return;
   activeAIs[ai] = !activeAIs[ai];
-  chip.classList.toggle('active', activeAIs[ai]);
-  chip.classList.toggle('inactive', !activeAIs[ai]);
-  // ensure at least one active
+  // ensure at least one stays active
   if (!Object.values(activeAIs).some(Boolean)) {
     activeAIs[ai] = true;
-    chip.classList.add('active');
-    chip.classList.remove('inactive');
+  }
+  chip.classList.toggle('active', activeAIs[ai]);
+  chip.classList.toggle('inactive', !activeAIs[ai]);
+  // if only 1 AI now selected, auto-disable synth
+  const activeCount = Object.values(activeAIs).filter(Boolean).length;
+  if (activeCount < 2 && synthMode) {
+    synthMode = false;
+    document.getElementById('chip-synth').classList.remove('active');
   }
   updateModeHelp();
 }
@@ -568,7 +619,12 @@ function toggleChip(ai) {
 function toggleSynth() {
   const activeCount = Object.values(activeAIs).filter(Boolean).length;
   if (activeCount < 2 && !synthMode) {
-    setStatus('⚠ 智能整合需要選取至少 2 個 AI 模型。', 'err'); return;
+    setStatus('⚠ 請先勾選至少 2 個 AI 模型，才能啟用智能整合。', 'err');
+    // flash the hint
+    const el = document.getElementById('aiModeHelp');
+    el.style.color = 'rgba(255,150,150,.8)';
+    setTimeout(() => { el.style.color = ''; }, 2000);
+    return;
   }
   synthMode = !synthMode;
   document.getElementById('chip-synth').classList.toggle('active', synthMode);
@@ -853,9 +909,16 @@ function parseResponse(text) {
 //  CALL CLAUDE
 // ══════════════════════════════════════════════════════════
 async function callClaude(system, user) {
-  const res = await fetch('https://api.anthropic.com/v1/messages', {
+  const key = ls('key_claude');
+  if (!key) throw new Error('Claude API 金鑰未設定，請點右上角「API 金鑰設定」輸入金鑰');
+  const res = await fetch('/api/anthropic/v1/messages', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': key,
+      'anthropic-version': '2023-06-01',
+      'anthropic-dangerous-direct-browser-access': 'true'
+    },
     body: JSON.stringify({
       model: 'claude-sonnet-4-20250514',
       max_tokens: 4096,
@@ -876,7 +939,7 @@ async function callGemini(system, user) {
   const key = ls('key_gemini');
   if (!key) throw new Error('Gemini API 金鑰未設定');
   const prompt = system + '\n\n' + user;
-  const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${key}`, {
+  const res = await fetch(`/api/gemini/v1beta/models/gemini-2.0-flash:generateContent?key=${key}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
@@ -897,7 +960,7 @@ async function callGemini(system, user) {
 async function callGPT(system, user) {
   const key = ls('key_gpt');
   if (!key) throw new Error('ChatGPT API 金鑰未設定');
-  const res = await fetch('https://api.openai.com/v1/chat/completions', {
+  const res = await fetch('/api/openai/v1/chat/completions', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + key },
     body: JSON.stringify({
@@ -1078,8 +1141,10 @@ async function factCheck() {
   document.getElementById('factBox').className = 'fact-box';
 
   try {
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
+    const claudeKey = ls('key_claude');
+    if (!claudeKey) throw new Error('Claude API 金鑰未設定，請點右上角設定');
+    const res = await fetch('/api/anthropic/v1/messages', {
+      method: 'POST', headers: { 'Content-Type': 'application/json', 'x-api-key': claudeKey, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
       body: JSON.stringify({
         model: 'claude-sonnet-4-20250514', max_tokens: 2048,
         tools: [{ type: 'web_search_20250305', name: 'web_search' }],
