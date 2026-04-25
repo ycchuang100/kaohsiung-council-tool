@@ -7,6 +7,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;600;700&family=Noto+Sans+TC:wght@300;400;500;700&display=swap');
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -138,6 +139,18 @@ body{font-family:'Noto Sans TC',sans-serif;background:var(--bg);color:var(--text
 .upload-z:hover{border-color:var(--red);background:var(--red-l)}
 .upload-z.ok{border-color:var(--green);background:#f0fff5;border-style:solid}
 .u-icon{font-size:20px}.u-text{font-size:12px;color:var(--muted);margin-top:3px}.u-sub{font-size:11px;color:#aaa;margin-top:2px}.u-files{font-size:11px;color:var(--green);margin-top:5px;font-weight:500}
+.u-types{display:flex;gap:5px;flex-wrap:wrap;justify-content:center;margin-top:7px}
+.u-type-tag{font-size:10px;padding:2px 7px;border-radius:4px;font-weight:600;letter-spacing:.3px}
+.tag-word{background:#dbeafe;color:#1e40af}.tag-excel{background:#dcfce7;color:#166534}
+.tag-ppt{background:#ffedd5;color:#9a3412}.tag-pdf{background:#fee2e2;color:#991b1b}
+.tag-img{background:#f3e8ff;color:#6b21a8}.tag-txt{background:#f3f4f6;color:#374151}
+.file-preview-list{margin-top:8px;display:flex;flex-direction:column;gap:4px;text-align:left;max-height:100px;overflow-y:auto}
+.file-preview-item{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text);background:#f8f8f8;border-radius:5px;padding:3px 8px}
+.file-preview-icon{font-size:13px;flex-shrink:0}
+.file-preview-name{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.file-preview-status{font-size:10px;color:var(--green);flex-shrink:0}
+.file-preview-status.loading{color:var(--gold)}
+.file-preview-status.err{color:var(--red)}
 
 /* ── HINT ── */
 .hint{background:var(--gold-l);border-left:3px solid var(--gold);border-radius:0 5px 5px 0;padding:9px 13px;font-size:11.5px;color:#5a4210;line-height:1.75;margin-top:12px}
@@ -392,10 +405,18 @@ body{font-family:'Noto Sans TC',sans-serif;background:var(--bg);color:var(--text
       <div class="upload-z" id="uploadZ" onclick="document.getElementById('fi').click()">
         <div class="u-icon">📎</div>
         <div class="u-text">點擊上傳或拖曳檔案至此</div>
-        <div class="u-sub">支援 .docx / .txt　內容將作為 AI 撰稿參考</div>
+        <div class="u-types">
+          <span class="u-type-tag tag-word">Word .docx</span>
+          <span class="u-type-tag tag-excel">Excel .xlsx</span>
+          <span class="u-type-tag tag-ppt">PowerPoint .pptx</span>
+          <span class="u-type-tag tag-pdf">PDF .pdf</span>
+          <span class="u-type-tag tag-img">圖片 JPG/PNG/WEBP</span>
+          <span class="u-type-tag tag-txt">文字 .txt</span>
+        </div>
         <div class="u-files" id="fileTag"></div>
+        <div class="file-preview-list" id="filePreviewList"></div>
       </div>
-      <input type="file" id="fi" multiple accept=".docx,.txt" style="display:none">
+      <input type="file" id="fi" multiple accept=".docx,.xlsx,.xls,.pptx,.ppt,.pdf,.txt,.jpg,.jpeg,.png,.gif,.webp,.bmp" style="display:none">
 
       <div class="hint">
         💡 <b>格式說明：</b>
@@ -674,20 +695,131 @@ fi.addEventListener('change', handleFiles);
 uploadZ.addEventListener('dragover', e=>{ e.preventDefault(); uploadZ.style.borderColor='var(--red)'; });
 uploadZ.addEventListener('dragleave', ()=>{ if(!uploadZ.classList.contains('ok')) uploadZ.style.borderColor='#ccc'; });
 uploadZ.addEventListener('drop', e=>{ e.preventDefault(); fi.files=e.dataTransfer.files; handleFiles(); });
+// uploaded image files stored separately for Vision API
+let uploadedImages = []; // [{name, base64, mimeType}]
+
+function getFileIcon(name) {
+  const ext = name.split('.').pop().toLowerCase();
+  const map = {docx:'📄',doc:'📄',xlsx:'📊',xls:'📊',pptx:'📑',ppt:'📑',
+               pdf:'📕',txt:'📝',jpg:'🖼',jpeg:'🖼',png:'🖼',gif:'🖼',webp:'🖼',bmp:'🖼'};
+  return map[ext] || '📎';
+}
+
+function addFilePreview(name, status='loading') {
+  const list = document.getElementById('filePreviewList');
+  const item = document.createElement('div');
+  item.className = 'file-preview-item';
+  item.id = 'fp-' + name.replace(/[^a-zA-Z0-9]/g,'_');
+  item.innerHTML = `<span class="file-preview-icon">${getFileIcon(name)}</span>
+    <span class="file-preview-name">${name}</span>
+    <span class="file-preview-status loading" id="fps-${name.replace(/[^a-zA-Z0-9]/g,'_')}">讀取中...</span>`;
+  list.appendChild(item);
+}
+function updateFilePreview(name, ok, msg='') {
+  const id = 'fps-' + name.replace(/[^a-zA-Z0-9]/g,'_');
+  const el = document.getElementById(id);
+  if(!el) return;
+  el.textContent = ok ? '✓ 已讀取' : ('✗ '+msg);
+  el.className = 'file-preview-status ' + (ok ? '' : 'err');
+}
+
 async function handleFiles() {
   const files = fi.files; if(!files.length) return;
   uploadZ.classList.add('ok');
-  document.getElementById('fileTag').textContent = '已上傳：'+[...files].map(f=>f.name).join('、');
+  document.getElementById('fileTag').textContent = `已選取 ${files.length} 個檔案`;
+  document.getElementById('filePreviewList').innerHTML = '';
   uploadedText = '';
+  uploadedImages = [];
+
   for(const f of files){
-    try{
-      if(f.name.toLowerCase().endsWith('.txt')) uploadedText += '\n'+await f.text();
-      else if(f.name.toLowerCase().endsWith('.docx')){
-        const ab=await f.arrayBuffer();
-        const r=await mammoth.extractRawText({arrayBuffer:ab});
-        uploadedText += '\n'+r.value;
+    const name = f.name;
+    const ext = name.split('.').pop().toLowerCase();
+    addFilePreview(name);
+    try {
+      // ── 純文字 ──
+      if(ext === 'txt') {
+        uploadedText += '\n【文件：'+name+'】\n' + await f.text();
+        updateFilePreview(name, true);
       }
-    }catch(e){ uploadedText+='\n[無法讀取：'+f.name+']'; }
+      // ── Word .docx ──
+      else if(ext === 'docx' || ext === 'doc') {
+        const ab = await f.arrayBuffer();
+        const r = await mammoth.extractRawText({arrayBuffer: ab});
+        uploadedText += '\n【Word文件：'+name+'】\n' + r.value;
+        updateFilePreview(name, true);
+      }
+      // ── Excel .xlsx / .xls ──
+      else if(ext === 'xlsx' || ext === 'xls') {
+        const ab = await f.arrayBuffer();
+        const wb = XLSX.read(ab, {type:'array'});
+        let excelText = '\n【Excel試算表：'+name+'】\n';
+        wb.SheetNames.forEach(sheetName => {
+          const ws = wb.Sheets[sheetName];
+          const csv = XLSX.utils.sheet_to_csv(ws, {blankrows: false});
+          if(csv.trim()) excelText += `[工作表：${sheetName}]\n${csv}\n`;
+        });
+        uploadedText += excelText;
+        updateFilePreview(name, true);
+      }
+      // ── PowerPoint .pptx ──
+      else if(ext === 'pptx' || ext === 'ppt') {
+        const ab = await f.arrayBuffer();
+        const zip = await JSZip.loadAsync(ab);
+        let pptText = '\n【PowerPoint簡報：'+name+'】\n';
+        const slideFiles = Object.keys(zip.files)
+          .filter(k => /^ppt\/slides\/slide\d+\.xml$/.test(k))
+          .sort((a,b) => {
+            const na = parseInt(a.match(/\d+/)?.[0]||0);
+            const nb = parseInt(b.match(/\d+/)?.[0]||0);
+            return na - nb;
+          });
+        for(let i=0; i<slideFiles.length; i++) {
+          const xml = await zip.files[slideFiles[i]].async('string');
+          // Extract text nodes from XML
+          const texts = [];
+          const matches = xml.matchAll(/<a:t[^>]*>([^<]+)<\/a:t>/g);
+          for(const m of matches) {
+            const t = m[1].trim();
+            if(t) texts.push(t);
+          }
+          if(texts.length) pptText += `[第${i+1}張投影片]\n${texts.join(' ')}\n`;
+        }
+        uploadedText += pptText;
+        updateFilePreview(name, true);
+      }
+      // ── PDF ── (send as image to Claude Vision)
+      else if(ext === 'pdf') {
+        const ab = await f.arrayBuffer();
+        const bytes = new Uint8Array(ab);
+        let binary = '';
+        bytes.forEach(b => binary += String.fromCharCode(b));
+        const base64 = btoa(binary);
+        uploadedImages.push({name, base64, mimeType:'application/pdf', type:'document'});
+        uploadedText += '\n【PDF文件：'+name+'（以圖像方式傳送給 AI 解讀）】';
+        updateFilePreview(name, true);
+      }
+      // ── 圖片：JPG, PNG, WEBP, GIF, BMP ──
+      else if(['jpg','jpeg','png','gif','webp','bmp'].includes(ext)) {
+        const mimeMap = {jpg:'image/jpeg',jpeg:'image/jpeg',png:'image/png',
+                         gif:'image/gif',webp:'image/webp',bmp:'image/bmp'};
+        const mime = mimeMap[ext] || 'image/jpeg';
+        const base64 = await new Promise((res,rej) => {
+          const reader = new FileReader();
+          reader.onload = e => res(e.target.result.split(',')[1]);
+          reader.onerror = rej;
+          reader.readAsDataURL(f);
+        });
+        uploadedImages.push({name, base64, mimeType: mime, type:'image'});
+        uploadedText += '\n【圖片：'+name+'（已上傳，AI 將以圖像方式解讀）】';
+        updateFilePreview(name, true);
+      }
+      else {
+        updateFilePreview(name, false, '不支援此格式');
+      }
+    } catch(e) {
+      updateFilePreview(name, false, e.message.slice(0,20));
+      uploadedText += '\n[無法讀取：'+name+']';
+    }
   }
 }
 
@@ -911,6 +1043,27 @@ function parseResponse(text) {
 async function callClaude(system, user) {
   const key = ls('key_claude');
   if (!key) throw new Error('Claude API 金鑰未設定，請點右上角「API 金鑰設定」輸入金鑰');
+
+  // Build message content: text + any uploaded images/PDFs
+  const userContent = [];
+  // Add uploaded image/PDF blocks (max 5 to avoid token overflow)
+  if (uploadedImages && uploadedImages.length) {
+    uploadedImages.slice(0, 5).forEach(img => {
+      if (img.type === 'document') {
+        userContent.push({
+          type: 'document',
+          source: { type: 'base64', media_type: img.mimeType, data: img.base64 }
+        });
+      } else {
+        userContent.push({
+          type: 'image',
+          source: { type: 'base64', media_type: img.mimeType, data: img.base64 }
+        });
+      }
+    });
+  }
+  userContent.push({ type: 'text', text: user });
+
   const res = await fetch('/api/anthropic/v1/messages', {
     method: 'POST',
     headers: {
@@ -924,7 +1077,7 @@ async function callClaude(system, user) {
       max_tokens: 4096,
       system,
       tools: [{ type: 'web_search_20250305', name: 'web_search' }],
-      messages: [{ role: 'user', content: user }]
+      messages: [{ role: 'user', content: userContent }]
     })
   });
   const data = await res.json();
@@ -938,20 +1091,29 @@ async function callClaude(system, user) {
 async function callGemini(system, user) {
   const key = ls('key_gemini');
   if (!key) throw new Error('Gemini API 金鑰未設定');
-  const prompt = system + '\n\n' + user;
+  const parts = [];
+  // Add images for Gemini Vision
+  if (uploadedImages && uploadedImages.length) {
+    uploadedImages.slice(0, 5).forEach(img => {
+      if (img.type === 'image') {
+        parts.push({ inline_data: { mime_type: img.mimeType, data: img.base64 } });
+      }
+    });
+  }
+  parts.push({ text: system + '\n\n' + user });
   const res = await fetch(`/api/gemini/v1beta/models/gemini-2.0-flash:generateContent?key=${key}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      contents: [{ parts: [{ text: prompt }] }],
+      contents: [{ parts }],
       generationConfig: { maxOutputTokens: 4096, temperature: 0.7 }
     })
   });
   const data = await res.json();
   if (data.error) throw new Error('Gemini: ' + data.error.message);
-  const parts = data.candidates?.[0]?.content?.parts;
-  if (!parts) throw new Error('Gemini: 回應格式錯誤');
-  return parts.map(p=>p.text||'').join('\n');
+  const resParts = data.candidates?.[0]?.content?.parts;
+  if (!resParts) throw new Error('Gemini: 回應格式錯誤');
+  return resParts.map(p=>p.text||'').join('\n');
 }
 
 // ══════════════════════════════════════════════════════════
@@ -960,6 +1122,21 @@ async function callGemini(system, user) {
 async function callGPT(system, user) {
   const key = ls('key_gpt');
   if (!key) throw new Error('ChatGPT API 金鑰未設定');
+  // Build user message content with images
+  let userMsg;
+  if (uploadedImages && uploadedImages.length > 0) {
+    userMsg = [{ type: 'text', text: user }];
+    uploadedImages.slice(0, 5).forEach(img => {
+      if (img.type === 'image') {
+        userMsg.push({
+          type: 'image_url',
+          image_url: { url: `data:${img.mimeType};base64,${img.base64}`, detail: 'high' }
+        });
+      }
+    });
+  } else {
+    userMsg = user;
+  }
   const res = await fetch('/api/openai/v1/chat/completions', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + key },
@@ -968,7 +1145,7 @@ async function callGPT(system, user) {
       max_tokens: 4096,
       messages: [
         { role: 'system', content: system },
-        { role: 'user',   content: user   }
+        { role: 'user',   content: userMsg }
       ]
     })
   });
