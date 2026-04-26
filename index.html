@@ -594,11 +594,6 @@ function updateKeyStatus(ai) {
   if (key || val) { el.textContent = '已設定'; el.className = 'key-status key-ok'; }
   else            { el.textContent = '未設定'; el.className = 'key-status key-no'; }
 }
-// Live update key status as user types
-['claude','gemini','gpt'].forEach(ai => {
-  const input = document.getElementById('key-' + ai);
-  if (input) input.addEventListener('input', () => updateKeyStatus(ai));
-});
 function ls(k, v) {
   if (v === undefined) return localStorage.getItem(k);
   localStorage.setItem(k, v);
@@ -2032,11 +2027,6 @@ function updateKeyStatus(ai) {
   if (key || val) { el.textContent = '已設定'; el.className = 'key-status key-ok'; }
   else            { el.textContent = '未設定'; el.className = 'key-status key-no'; }
 }
-// Live update key status as user types
-['claude','gemini','gpt'].forEach(ai => {
-  const input = document.getElementById('key-' + ai);
-  if (input) input.addEventListener('input', () => updateKeyStatus(ai));
-});
 function ls(k, v) {
   if (v === undefined) return localStorage.getItem(k);
   localStorage.setItem(k, v);
@@ -2971,6 +2961,13 @@ ${paragraphs}
 window.addEventListener('click', e => {
   if (e.target === document.getElementById('settingsModal')) closeSettings();
 });
+
+// Live update key status as user types in settings modal
+['claude','gemini','gpt'].forEach(ai => {
+  const input = document.getElementById('key-' + ai);
+  if (input) input.addEventListener('input', () => updateKeyStatus(ai));
+});
+
 refreshChipStates();
 </script>
 </body>
