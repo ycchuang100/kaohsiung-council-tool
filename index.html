@@ -5,9 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>高雄市議會文稿產生器</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;600;700&family=Noto+Sans+TC:wght@300;400;500;700&display=swap');
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -68,47 +68,27 @@ body{font-family:'Noto Sans TC',sans-serif;background:var(--bg);color:var(--text
 .modal-save-btn:hover{background:var(--red-d)}
 
 /* ── AI MODE SELECTOR ── */
-.ai-mode-panel{background:linear-gradient(135deg,#1a1a2e 0%,#16213e 100%);border-radius:var(--br);padding:16px 20px;margin-bottom:14px;border:1px solid #2a2a4a}
-.ai-mode-title{color:rgba(255,255,255,.55);font-size:11px;letter-spacing:1px;text-transform:uppercase;margin-bottom:12px;font-weight:600}
-.ai-mode-row{display:flex;gap:10px;flex-wrap:wrap;align-items:stretch}
-.ai-chip{display:flex;align-items:center;gap:9px;padding:9px 16px;border-radius:9px;cursor:pointer;transition:all .2s;border:1.5px solid rgba(255,255,255,.12);user-select:none;background:rgba(255,255,255,.06);min-width:140px}
-.ai-chip:hover:not(.chip-disabled){border-color:rgba(255,255,255,.28);background:rgba(255,255,255,.1)}
-.ai-chip-checkbox{width:17px;height:17px;border-radius:4px;border:2px solid rgba(255,255,255,.3);display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .2s;background:transparent}
-.ai-chip-checkbox .ck{display:none;font-size:11px;font-weight:900;line-height:1}
-.ai-chip-logo{width:22px;height:22px;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff;flex-shrink:0}
+.ai-mode-panel{background:linear-gradient(135deg,#1a1a2e 0%,#16213e 100%);border-radius:var(--br);padding:14px 18px;margin-bottom:14px;border:1px solid #2a2a4a}
+.ai-mode-title{color:rgba(255,255,255,.6);font-size:11px;letter-spacing:1px;text-transform:uppercase;margin-bottom:10px}
+.ai-mode-row{display:flex;gap:8px;flex-wrap:wrap}
+.ai-chip{display:flex;align-items:center;gap:6px;padding:7px 14px;border-radius:8px;cursor:pointer;transition:all .2s;border:1.5px solid transparent;user-select:none;font-size:12px;font-weight:600}
+.ai-chip-logo{width:20px;height:20px;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;flex-shrink:0}
 .chip-claude .ai-chip-logo{background:var(--claude)}
 .chip-gemini .ai-chip-logo{background:var(--gemini)}
 .chip-gpt    .ai-chip-logo{background:var(--gpt)}
-.ai-chip-info{display:flex;flex-direction:column;gap:1px}
-.ai-chip .chip-label{font-size:13px;font-weight:600;color:rgba(255,255,255,.5);transition:color .2s}
-.ai-chip .chip-sub{font-size:10px;color:rgba(255,255,255,.28);transition:color .2s}
-.chip-disabled{opacity:.32;cursor:not-allowed!important}
-.chip-disabled .chip-label::after{content:' (未設定金鑰)';font-size:9px;opacity:.7}
-.ai-chip.active .ai-chip-checkbox{border-color:currentColor;background:currentColor}
-.ai-chip.active .ai-chip-checkbox .ck{display:block;color:#fff}
-.chip-claude.active{border-color:rgba(220,80,80,.7);background:rgba(181,32,42,.2)}
-.chip-claude.active .chip-label{color:#ff9090}
-.chip-claude.active .chip-sub{color:rgba(255,144,144,.6)}
-.chip-gemini.active{border-color:rgba(80,150,255,.7);background:rgba(26,115,232,.18)}
-.chip-gemini.active .chip-label{color:#7ab4ff}
-.chip-gemini.active .chip-sub{color:rgba(122,180,255,.6)}
-.chip-gpt.active{border-color:rgba(16,163,127,.7);background:rgba(16,163,127,.18)}
-.chip-gpt.active .chip-label{color:#6be0c8}
-.chip-gpt.active .chip-sub{color:rgba(107,224,200,.6)}
-.ai-mode-divider{display:flex;align-items:center;color:rgba(255,255,255,.18);font-size:18px;padding:0 2px;align-self:center}
-.ai-synth-chip{display:flex;align-items:center;gap:9px;padding:9px 16px;border-radius:9px;cursor:pointer;transition:all .2s;border:1.5px dashed rgba(255,200,50,.25);user-select:none;background:rgba(255,200,50,.04);min-width:190px}
-.ai-synth-chip:hover{border-color:rgba(255,200,50,.5);background:rgba(255,200,50,.09)}
-.ai-synth-checkbox{width:17px;height:17px;border-radius:4px;border:2px solid rgba(255,200,50,.3);display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .2s}
-.ai-synth-checkbox .ck{display:none;font-size:11px;font-weight:900;line-height:1;color:#1a1a2e}
-.ai-synth-chip.active .ai-synth-checkbox{background:#ffd750;border-color:#ffd750}
-.ai-synth-chip.active .ai-synth-checkbox .ck{display:block}
-.ai-synth-icon{font-size:18px;flex-shrink:0}
-.ai-synth-info{display:flex;flex-direction:column;gap:1px}
-.ai-synth-chip .synth-label{font-size:13px;font-weight:600;color:rgba(255,200,50,.55);transition:color .2s}
-.ai-synth-chip .synth-sub{font-size:10px;color:rgba(255,200,50,.32);transition:color .2s}
-.ai-synth-chip.active .synth-label{color:rgba(255,220,80,.95)}
-.ai-synth-chip.active .synth-sub{color:rgba(255,220,80,.6)}
-.ai-mode-help{color:rgba(255,255,255,.3);font-size:10.5px;margin-top:10px;line-height:1.65;border-top:1px solid rgba(255,255,255,.07);padding-top:9px}
+.ai-chip.inactive{background:rgba(255,255,255,.07);color:rgba(255,255,255,.45);border-color:rgba(255,255,255,.12)}
+.ai-chip.inactive:hover{background:rgba(255,255,255,.12);color:rgba(255,255,255,.7)}
+.chip-claude.active{background:rgba(181,32,42,.25);color:#ff8a8a;border-color:rgba(181,32,42,.6)}
+.chip-gemini.active{background:rgba(26,115,232,.2);color:#7ab4ff;border-color:rgba(26,115,232,.5)}
+.chip-gpt.active{background:rgba(16,163,127,.2);color:#6be0c8;border-color:rgba(16,163,127,.5)}
+.chip-disabled{opacity:.35;cursor:not-allowed!important;pointer-events:none}
+.ai-chip .chip-label{font-size:12px;font-weight:600}
+.ai-chip .chip-sub{font-size:10px;opacity:.7;margin-left:2px}
+.ai-synth-chip{display:flex;align-items:center;gap:6px;padding:7px 14px;border-radius:8px;cursor:pointer;transition:all .2s;border:1.5px dashed rgba(255,200,50,.3);color:rgba(255,200,50,.55);font-size:12px;font-weight:600;user-select:none}
+.ai-synth-chip.active{background:rgba(255,200,50,.12);color:rgba(255,220,80,.9);border-color:rgba(255,200,50,.6)}
+.ai-synth-chip:hover{background:rgba(255,200,50,.08);color:rgba(255,220,80,.75)}
+.ai-mode-sep{width:1px;background:rgba(255,255,255,.15);margin:0 4px;align-self:stretch}
+.ai-mode-help{color:rgba(255,255,255,.35);font-size:10.5px;margin-top:8px;line-height:1.6}
 
 /* ── GRID ── */
 .g5{display:grid;grid-template-columns:repeat(5,1fr);gap:11px}
@@ -139,18 +119,6 @@ body{font-family:'Noto Sans TC',sans-serif;background:var(--bg);color:var(--text
 .upload-z:hover{border-color:var(--red);background:var(--red-l)}
 .upload-z.ok{border-color:var(--green);background:#f0fff5;border-style:solid}
 .u-icon{font-size:20px}.u-text{font-size:12px;color:var(--muted);margin-top:3px}.u-sub{font-size:11px;color:#aaa;margin-top:2px}.u-files{font-size:11px;color:var(--green);margin-top:5px;font-weight:500}
-.u-types{display:flex;gap:5px;flex-wrap:wrap;justify-content:center;margin-top:7px}
-.u-type-tag{font-size:10px;padding:2px 7px;border-radius:4px;font-weight:600;letter-spacing:.3px}
-.tag-word{background:#dbeafe;color:#1e40af}.tag-excel{background:#dcfce7;color:#166534}
-.tag-ppt{background:#ffedd5;color:#9a3412}.tag-pdf{background:#fee2e2;color:#991b1b}
-.tag-img{background:#f3e8ff;color:#6b21a8}.tag-txt{background:#f3f4f6;color:#374151}
-.file-preview-list{margin-top:8px;display:flex;flex-direction:column;gap:4px;text-align:left;max-height:100px;overflow-y:auto}
-.file-preview-item{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text);background:#f8f8f8;border-radius:5px;padding:3px 8px}
-.file-preview-icon{font-size:13px;flex-shrink:0}
-.file-preview-name{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.file-preview-status{font-size:10px;color:var(--green);flex-shrink:0}
-.file-preview-status.loading{color:var(--gold)}
-.file-preview-status.err{color:var(--red)}
 
 /* ── HINT ── */
 .hint{background:var(--gold-l);border-left:3px solid var(--gold);border-radius:0 5px 5px 0;padding:9px 13px;font-size:11.5px;color:#5a4210;line-height:1.75;margin-top:12px}
@@ -316,49 +284,31 @@ body{font-family:'Noto Sans TC',sans-serif;background:var(--bg);color:var(--text
 
   <!-- ═══════ AI MODE SELECTOR ═══════ -->
   <div class="ai-mode-panel">
-    <div class="ai-mode-title">🤖 選擇 AI 模型（可單選或多選，勾選 2 個以上才能啟用智能整合）</div>
+    <div class="ai-mode-title">🤖 選擇 AI 模型</div>
     <div class="ai-mode-row" id="aiModeRow">
-
       <div class="ai-chip chip-claude active" id="chip-claude" onclick="toggleChip('claude')">
-        <div class="ai-chip-checkbox" id="ckbox-claude"><span class="ck">✓</span></div>
         <div class="ai-chip-logo">C</div>
-        <div class="ai-chip-info">
-          <span class="chip-label">Claude</span>
-          <span class="chip-sub">Sonnet 4</span>
-        </div>
+        <span class="chip-label">Claude</span>
+        <span class="chip-sub">Sonnet</span>
       </div>
-
       <div class="ai-chip chip-gemini inactive chip-disabled" id="chip-gemini" onclick="toggleChip('gemini')">
-        <div class="ai-chip-checkbox" id="ckbox-gemini"><span class="ck">✓</span></div>
         <div class="ai-chip-logo">G</div>
-        <div class="ai-chip-info">
-          <span class="chip-label">Gemini</span>
-          <span class="chip-sub">2.0 Flash</span>
-        </div>
+        <span class="chip-label">Gemini</span>
+        <span class="chip-sub">2.0 Flash</span>
       </div>
-
       <div class="ai-chip chip-gpt inactive chip-disabled" id="chip-gpt" onclick="toggleChip('gpt')">
-        <div class="ai-chip-checkbox" id="ckbox-gpt"><span class="ck">✓</span></div>
         <div class="ai-chip-logo">⊕</div>
-        <div class="ai-chip-info">
-          <span class="chip-label">ChatGPT</span>
-          <span class="chip-sub">GPT-4o</span>
-        </div>
+        <span class="chip-label">ChatGPT</span>
+        <span class="chip-sub">GPT-4o</span>
       </div>
-
-      <div class="ai-mode-divider">｜</div>
-
+      <div class="ai-mode-sep"></div>
       <div class="ai-synth-chip" id="chip-synth" onclick="toggleSynth()">
-        <div class="ai-synth-checkbox" id="ckbox-synth"><span class="ck">✓</span></div>
-        <div class="ai-synth-icon">✨</div>
-        <div class="ai-synth-info">
-          <span class="synth-label">智能整合</span>
-          <span class="synth-sub">需勾選 2 個以上 AI</span>
-        </div>
+        <span>✨</span>
+        <span class="chip-label">智能整合</span>
+        <span class="chip-sub">多 AI 彙整最佳版本</span>
       </div>
-
     </div>
-    <div class="ai-mode-help" id="aiModeHelp">✦ 單選：僅用該 AI 產稿　｜　多選 + 智能整合：各 AI 獨立撰寫，再由 Claude 彙整最佳版本　｜　請至右上角「⚙️ API 金鑰設定」輸入金鑰以啟用 Gemini / ChatGPT</div>
+    <div class="ai-mode-help" id="aiModeHelp">已選：Claude　｜ 請至右上角「API 金鑰設定」輸入其他 AI 的金鑰以啟用</div>
   </div>
 
   <!-- ═══════ 基本資料 ═══════ -->
@@ -405,16 +355,16 @@ body{font-family:'Noto Sans TC',sans-serif;background:var(--bg);color:var(--text
       <div class="upload-z" id="uploadZ" onclick="document.getElementById('fi').click()">
         <div class="u-icon">📎</div>
         <div class="u-text">點擊上傳或拖曳檔案至此</div>
-        <div class="u-types">
-          <span class="u-type-tag tag-word">Word .docx</span>
-          <span class="u-type-tag tag-excel">Excel .xlsx</span>
-          <span class="u-type-tag tag-ppt">PowerPoint .pptx</span>
-          <span class="u-type-tag tag-pdf">PDF .pdf</span>
-          <span class="u-type-tag tag-img">圖片 JPG/PNG/WEBP</span>
-          <span class="u-type-tag tag-txt">文字 .txt</span>
+        <div style="display:flex;gap:5px;flex-wrap:wrap;justify-content:center;margin-top:6px">
+          <span style="font-size:10px;padding:2px 7px;border-radius:4px;background:#dbeafe;color:#1e40af;font-weight:600">Word .docx</span>
+          <span style="font-size:10px;padding:2px 7px;border-radius:4px;background:#dcfce7;color:#166534;font-weight:600">Excel .xlsx</span>
+          <span style="font-size:10px;padding:2px 7px;border-radius:4px;background:#ffedd5;color:#9a3412;font-weight:600">PowerPoint .pptx</span>
+          <span style="font-size:10px;padding:2px 7px;border-radius:4px;background:#fee2e2;color:#991b1b;font-weight:600">PDF .pdf</span>
+          <span style="font-size:10px;padding:2px 7px;border-radius:4px;background:#f3e8ff;color:#6b21a8;font-weight:600">圖片 JPG/PNG/WEBP</span>
+          <span style="font-size:10px;padding:2px 7px;border-radius:4px;background:#f3f4f6;color:#374151;font-weight:600">文字 .txt</span>
         </div>
         <div class="u-files" id="fileTag"></div>
-        <div class="file-preview-list" id="filePreviewList"></div>
+        <div id="filePreviewList" style="margin-top:6px;display:flex;flex-direction:column;gap:3px;text-align:left;max-height:90px;overflow-y:auto"></div>
       </div>
       <input type="file" id="fi" multiple accept=".docx,.xlsx,.xls,.pptx,.ppt,.pdf,.txt,.jpg,.jpeg,.png,.gif,.webp,.bmp" style="display:none">
 
@@ -549,6 +499,8 @@ body{font-family:'Noto Sans TC',sans-serif;background:var(--bg);color:var(--text
 //  STATE
 // ══════════════════════════════════════════════════════════
 let uploadedText = '';
+let uploadedImages = [];
+
 let gid = 0;
 let activeAIs = { claude: false, gemini: false, gpt: false };
 let synthMode = false;
@@ -569,30 +521,23 @@ function saveSettings() {
   const c = document.getElementById('key-claude').value.trim();
   const g = document.getElementById('key-gemini').value.trim();
   const p = document.getElementById('key-gpt').value.trim();
-  if (c) ls('key_claude', c); else lsDel('key_claude');
-  if (g) ls('key_gemini', g); else lsDel('key_gemini');
-  if (p) ls('key_gpt',    p); else lsDel('key_gpt');
-  // Reset activeAIs so refreshChipStates can auto-activate all newly keyed AIs
-  const prevActive = {...activeAIs};
-  activeAIs = { claude: false, gemini: false, gpt: false };
-  // Re-activate any that were previously active AND still have a key
-  ['claude','gemini','gpt'].forEach(ai => {
-    if (prevActive[ai] && !!ls('key_'+ai)) activeAIs[ai] = true;
-  });
+  if(c) ls('key_claude',c); else lsDel('key_claude');
+  if(g) ls('key_gemini',g); else lsDel('key_gemini');
+  if(p) ls('key_gpt',   p); else lsDel('key_gpt');
+  // Reset active state so refreshChipStates re-evaluates
+  activeAIs = {claude:false, gemini:false, gpt:false};
   refreshChipStates();
   closeSettings();
   const configured = ['claude','gemini','gpt'].filter(a=>!!ls('key_'+a));
-  const names = {claude:'Claude', gemini:'Gemini', gpt:'ChatGPT'};
-  setStatus('✓ 金鑰已儲存。可使用：' + configured.map(a=>names[a]).join('、'), 'ok');
+  const names = {claude:'Claude',gemini:'Gemini',gpt:'ChatGPT'};
+  setStatus('✓ 金鑰已儲存。可使用：'+(configured.length ? configured.map(a=>names[a]).join('、') : '（無）'), 'ok');
 }
 function updateKeyStatus(ai) {
   const key = ls('key_' + ai);
-  const inputEl = document.getElementById('key-' + ai);
   const el  = document.getElementById('kstat-' + ai);
   if (!el) return;
-  const val = inputEl ? inputEl.value.trim() : '';
-  if (key || val) { el.textContent = '已設定'; el.className = 'key-status key-ok'; }
-  else            { el.textContent = '未設定'; el.className = 'key-status key-no'; }
+  if (key) { el.textContent = '已設定'; el.className = 'key-status key-ok'; }
+  else      { el.textContent = '未設定'; el.className = 'key-status key-no'; }
 }
 function ls(k, v) {
   if (v === undefined) return localStorage.getItem(k);
@@ -604,81 +549,46 @@ function lsDel(k) { localStorage.removeItem(k); }
 //  AI CHIP MANAGEMENT
 // ══════════════════════════════════════════════════════════
 function refreshChipStates() {
-  const aiList = ['claude', 'gemini', 'gpt'];
+  const aiList = ['claude','gemini','gpt'];
+  let anyActive = Object.values(activeAIs).some(Boolean);
   aiList.forEach(ai => {
-    const hasKey = !!ls('key_' + ai);
-    const chip = document.getElementById('chip-' + ai);
-    if (!hasKey) {
-      // No key: disable chip, grey out, cannot select
+    const hasKey = !!ls('key_'+ai);
+    const chip   = document.getElementById('chip-'+ai);
+    if(!hasKey){
       chip.classList.add('chip-disabled');
-      chip.classList.remove('active');
-      chip.classList.add('inactive');
+      chip.classList.remove('active'); chip.classList.add('inactive');
       activeAIs[ai] = false;
     } else {
-      // Has key: enable chip, auto-activate
       chip.classList.remove('chip-disabled');
-      chip.classList.remove('inactive');
-      // Only auto-activate on first load (activeAIs still all false)
-      // or if it was already active
-      if (!Object.values(activeAIs).some(Boolean) || activeAIs[ai]) {
-        activeAIs[ai] = true;
-        chip.classList.add('active');
-      }
+      // auto-activate on first load
+      if(!anyActive){ activeAIs[ai]=true; anyActive=true; }
+      chip.classList.toggle('active',  activeAIs[ai]);
+      chip.classList.toggle('inactive',!activeAIs[ai]);
     }
   });
-  // Safety: if somehow nothing active but keys exist, activate first with key
-  if (!Object.values(activeAIs).some(Boolean)) {
-    for (const ai of aiList) {
-      if (!!ls('key_' + ai)) {
-        activeAIs[ai] = true;
-        const chip = document.getElementById('chip-' + ai);
-        chip.classList.add('active');
-        chip.classList.remove('inactive');
-        chip.classList.remove('chip-disabled');
-        break;
-      }
-    }
-  }
-  // Disable synth if fewer than 2 active
   const activeCount = Object.values(activeAIs).filter(Boolean).length;
-  if (activeCount < 2 && synthMode) {
-    synthMode = false;
-    document.getElementById('chip-synth').classList.remove('active');
-  }
+  if(activeCount<2 && synthMode){ synthMode=false; document.getElementById('chip-synth').classList.remove('active'); }
   updateModeHelp();
 }
 
 function toggleChip(ai) {
-  const chip = document.getElementById('chip-' + ai);
-  if (chip.classList.contains('chip-disabled')) return;
-  const willDeactivate = activeAIs[ai];
-  // Prevent deselecting if it's the only active one
-  if (willDeactivate && Object.values(activeAIs).filter(Boolean).length === 1) {
-    setStatus('⚠ 請至少保持一個 AI 模型被勾選。', 'err');
-    return;
+  const chip = document.getElementById('chip-'+ai);
+  if(chip.classList.contains('chip-disabled')) return;
+  if(activeAIs[ai] && Object.values(activeAIs).filter(Boolean).length===1){
+    setStatus('⚠ 至少保持一個 AI 被勾選。','err'); return;
   }
   activeAIs[ai] = !activeAIs[ai];
   chip.classList.toggle('active', activeAIs[ai]);
-  chip.classList.toggle('inactive', !activeAIs[ai]);
-  // Auto-disable synth if fewer than 2 active
-  const activeCount = Object.values(activeAIs).filter(Boolean).length;
-  if (activeCount < 2 && synthMode) {
-    synthMode = false;
-    document.getElementById('chip-synth').classList.remove('active');
-    setStatus('ℹ 智能整合需要 2 個以上 AI，已自動取消。', 'warn');
-  }
+  chip.classList.toggle('inactive',!activeAIs[ai]);
+  const cnt = Object.values(activeAIs).filter(Boolean).length;
+  if(cnt<2 && synthMode){ synthMode=false; document.getElementById('chip-synth').classList.remove('active'); }
   updateModeHelp();
 }
 
 function toggleSynth() {
   const activeCount = Object.values(activeAIs).filter(Boolean).length;
   if (activeCount < 2 && !synthMode) {
-    setStatus('⚠ 請先勾選至少 2 個 AI 模型，才能啟用智能整合。', 'err');
-    // flash the hint
-    const el = document.getElementById('aiModeHelp');
-    el.style.color = 'rgba(255,150,150,.8)';
-    setTimeout(() => { el.style.color = ''; }, 2000);
-    return;
+    setStatus('⚠ 智能整合需要選取至少 2 個 AI 模型。', 'err'); return;
   }
   synthMode = !synthMode;
   document.getElementById('chip-synth').classList.toggle('active', synthMode);
@@ -686,20 +596,18 @@ function toggleSynth() {
 }
 
 function updateModeHelp() {
-  const selected = Object.entries(activeAIs).filter(([,v])=>v).map(([k])=>k);
-  const names = { claude:'Claude', gemini:'Gemini', gpt:'ChatGPT' };
-  // Show which AIs have keys configured
-  const configured = ['claude','gemini','gpt'].filter(a => !!ls('key_'+a));
-  const configured  = ['claude','gemini','gpt'].filter(a => !!ls('key_'+a));
-  const unconfigured = ['claude','gemini','gpt'].filter(a => !ls('key_'+a));
+  const names = {claude:'Claude',gemini:'Gemini',gpt:'ChatGPT'};
+  const selected     = Object.entries(activeAIs).filter(([,v])=>v).map(([k])=>k);
+  const configured   = ['claude','gemini','gpt'].filter(a=>!!ls('key_'+a));
+  const unconfigured = ['claude','gemini','gpt'].filter(a=>!ls('key_'+a));
   let txt = '';
-  if (configured.length === 0) {
-    txt = '⚠ 尚未設定任何 API 金鑰，請點右上角「⚙️ API 金鑰設定」輸入金鑰後即可使用';
+  if(configured.length===0){
+    txt='⚠ 尚未設定任何 API 金鑰，請點右上角「⚙️ API 金鑰設定」';
   } else {
-    txt = '✦ 可使用：' + configured.map(k=>names[k]).join('、');
-    if (selected.length) txt += '　｜　已勾選：' + selected.map(k=>names[k]).join(' ＋ ');
-    if (synthMode) txt += '　｜　✨ 智能整合：開啟';
-    if (unconfigured.length) txt += '　｜　未設定：' + unconfigured.map(k=>names[k]).join('、') + '（點右上角⚙️設定金鑰後可啟用）';
+    txt='✦ 可使用：'+configured.map(k=>names[k]).join('、');
+    if(selected.length) txt+='　｜　已勾選：'+selected.map(k=>names[k]).join(' ＋ ');
+    if(synthMode) txt+='　｜　✨ 智能整合：開啟';
+    if(unconfigured.length) txt+='　｜　未設定：'+unconfigured.map(k=>names[k]).join('、')+'（右上角⚙️可設定）';
   }
   document.getElementById('aiModeHelp').textContent = txt;
 }
@@ -737,131 +645,60 @@ fi.addEventListener('change', handleFiles);
 uploadZ.addEventListener('dragover', e=>{ e.preventDefault(); uploadZ.style.borderColor='var(--red)'; });
 uploadZ.addEventListener('dragleave', ()=>{ if(!uploadZ.classList.contains('ok')) uploadZ.style.borderColor='#ccc'; });
 uploadZ.addEventListener('drop', e=>{ e.preventDefault(); fi.files=e.dataTransfer.files; handleFiles(); });
-// uploaded image files stored separately for Vision API
-let uploadedImages = []; // [{name, base64, mimeType}]
-
-function getFileIcon(name) {
-  const ext = name.split('.').pop().toLowerCase();
-  const map = {docx:'📄',doc:'📄',xlsx:'📊',xls:'📊',pptx:'📑',ppt:'📑',
-               pdf:'📕',txt:'📝',jpg:'🖼',jpeg:'🖼',png:'🖼',gif:'🖼',webp:'🖼',bmp:'🖼'};
-  return map[ext] || '📎';
-}
-
-function addFilePreview(name, status='loading') {
-  const list = document.getElementById('filePreviewList');
-  const item = document.createElement('div');
-  item.className = 'file-preview-item';
-  item.id = 'fp-' + name.replace(/[^a-zA-Z0-9]/g,'_');
-  item.innerHTML = `<span class="file-preview-icon">${getFileIcon(name)}</span>
-    <span class="file-preview-name">${name}</span>
-    <span class="file-preview-status loading" id="fps-${name.replace(/[^a-zA-Z0-9]/g,'_')}">讀取中...</span>`;
-  list.appendChild(item);
-}
-function updateFilePreview(name, ok, msg='') {
-  const id = 'fps-' + name.replace(/[^a-zA-Z0-9]/g,'_');
-  const el = document.getElementById(id);
-  if(!el) return;
-  el.textContent = ok ? '✓ 已讀取' : ('✗ '+msg);
-  el.className = 'file-preview-status ' + (ok ? '' : 'err');
-}
-
 async function handleFiles() {
   const files = fi.files; if(!files.length) return;
   uploadZ.classList.add('ok');
   document.getElementById('fileTag').textContent = `已選取 ${files.length} 個檔案`;
   document.getElementById('filePreviewList').innerHTML = '';
-  uploadedText = '';
-  uploadedImages = [];
-
+  uploadedText = ''; uploadedImages = [];
+  const icons = {docx:'📄',doc:'📄',xlsx:'📊',xls:'📊',pptx:'📑',ppt:'📑',
+                 pdf:'📕',txt:'📝',jpg:'🖼',jpeg:'🖼',png:'🖼',gif:'🖼',webp:'🖼',bmp:'🖼'};
   for(const f of files){
     const name = f.name;
-    const ext = name.split('.').pop().toLowerCase();
-    addFilePreview(name);
+    const ext  = name.split('.').pop().toLowerCase();
+    const item = document.createElement('div');
+    item.style.cssText='display:flex;align-items:center;gap:6px;font-size:11px;background:#f8f8f8;border-radius:5px;padding:3px 8px;margin-bottom:3px';
+    const statusSpan = document.createElement('span');
+    statusSpan.style.cssText='margin-left:auto;font-size:10px;color:#a87218';
+    statusSpan.textContent='讀取中...';
+    item.innerHTML=`<span>${icons[ext]||'📎'}</span><span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${name}</span>`;
+    item.appendChild(statusSpan);
+    document.getElementById('filePreviewList').appendChild(item);
+    const ok  = ()=>{ statusSpan.textContent='✓ 已讀取'; statusSpan.style.color='#1e7e45'; };
+    const err = (m)=>{ statusSpan.textContent='✗ '+m; statusSpan.style.color='#b5202a'; };
     try {
-      // ── 純文字 ──
-      if(ext === 'txt') {
-        uploadedText += '\n【文件：'+name+'】\n' + await f.text();
-        updateFilePreview(name, true);
-      }
-      // ── Word .docx ──
-      else if(ext === 'docx' || ext === 'doc') {
-        const ab = await f.arrayBuffer();
-        const r = await mammoth.extractRawText({arrayBuffer: ab});
-        uploadedText += '\n【Word文件：'+name+'】\n' + r.value;
-        updateFilePreview(name, true);
-      }
-      // ── Excel .xlsx / .xls ──
-      else if(ext === 'xlsx' || ext === 'xls') {
-        const ab = await f.arrayBuffer();
-        const wb = XLSX.read(ab, {type:'array'});
-        let excelText = '\n【Excel試算表：'+name+'】\n';
-        wb.SheetNames.forEach(sheetName => {
-          const ws = wb.Sheets[sheetName];
-          const csv = XLSX.utils.sheet_to_csv(ws, {blankrows: false});
-          if(csv.trim()) excelText += `[工作表：${sheetName}]\n${csv}\n`;
-        });
-        uploadedText += excelText;
-        updateFilePreview(name, true);
-      }
-      // ── PowerPoint .pptx ──
-      else if(ext === 'pptx' || ext === 'ppt') {
-        const ab = await f.arrayBuffer();
-        const zip = await JSZip.loadAsync(ab);
-        let pptText = '\n【PowerPoint簡報：'+name+'】\n';
-        const slideFiles = Object.keys(zip.files)
-          .filter(k => /^ppt\/slides\/slide\d+\.xml$/.test(k))
-          .sort((a,b) => {
-            const na = parseInt(a.match(/\d+/)?.[0]||0);
-            const nb = parseInt(b.match(/\d+/)?.[0]||0);
-            return na - nb;
-          });
-        for(let i=0; i<slideFiles.length; i++) {
-          const xml = await zip.files[slideFiles[i]].async('string');
-          // Extract text nodes from XML
-          const texts = [];
-          const matches = xml.matchAll(/<a:t[^>]*>([^<]+)<\/a:t>/g);
-          for(const m of matches) {
-            const t = m[1].trim();
-            if(t) texts.push(t);
-          }
-          if(texts.length) pptText += `[第${i+1}張投影片]\n${texts.join(' ')}\n`;
+      if(ext==='txt'){
+        uploadedText += '\n【文件：'+name+'】\n'+await f.text(); ok();
+      } else if(ext==='docx'||ext==='doc'){
+        const r = await mammoth.extractRawText({arrayBuffer:await f.arrayBuffer()});
+        uploadedText += '\n【Word：'+name+'】\n'+r.value; ok();
+      } else if(ext==='xlsx'||ext==='xls'){
+        const wb = XLSX.read(await f.arrayBuffer(),{type:'array'});
+        let t='\n【Excel：'+name+'】\n';
+        wb.SheetNames.forEach(s=>{ const csv=XLSX.utils.sheet_to_csv(wb.Sheets[s],{blankrows:false}); if(csv.trim()) t+=`[${s}]\n${csv}\n`; });
+        uploadedText += t; ok();
+      } else if(ext==='pptx'||ext==='ppt'){
+        const zip = await JSZip.loadAsync(await f.arrayBuffer());
+        let t='\n【PPT：'+name+'】\n';
+        const slides = Object.keys(zip.files).filter(k=>/^ppt\/slides\/slide\d+\.xml$/.test(k)).sort((a,b)=>parseInt(a.match(/\d+/)[0])-parseInt(b.match(/\d+/)[0]));
+        for(let i=0;i<slides.length;i++){
+          const xml=await zip.files[slides[i]].async('string');
+          const txts=[...xml.matchAll(/<a:t[^>]*>([^<]+)<\/a:t>/g)].map(m=>m[1].trim()).filter(Boolean);
+          if(txts.length) t+=`[第${i+1}張]\n${txts.join(' ')}\n`;
         }
-        uploadedText += pptText;
-        updateFilePreview(name, true);
-      }
-      // ── PDF ── (send as image to Claude Vision)
-      else if(ext === 'pdf') {
-        const ab = await f.arrayBuffer();
-        const bytes = new Uint8Array(ab);
-        let binary = '';
-        bytes.forEach(b => binary += String.fromCharCode(b));
-        const base64 = btoa(binary);
-        uploadedImages.push({name, base64, mimeType:'application/pdf', type:'document'});
-        uploadedText += '\n【PDF文件：'+name+'（以圖像方式傳送給 AI 解讀）】';
-        updateFilePreview(name, true);
-      }
-      // ── 圖片：JPG, PNG, WEBP, GIF, BMP ──
-      else if(['jpg','jpeg','png','gif','webp','bmp'].includes(ext)) {
-        const mimeMap = {jpg:'image/jpeg',jpeg:'image/jpeg',png:'image/png',
-                         gif:'image/gif',webp:'image/webp',bmp:'image/bmp'};
-        const mime = mimeMap[ext] || 'image/jpeg';
-        const base64 = await new Promise((res,rej) => {
-          const reader = new FileReader();
-          reader.onload = e => res(e.target.result.split(',')[1]);
-          reader.onerror = rej;
-          reader.readAsDataURL(f);
-        });
-        uploadedImages.push({name, base64, mimeType: mime, type:'image'});
-        uploadedText += '\n【圖片：'+name+'（已上傳，AI 將以圖像方式解讀）】';
-        updateFilePreview(name, true);
-      }
-      else {
-        updateFilePreview(name, false, '不支援此格式');
-      }
-    } catch(e) {
-      updateFilePreview(name, false, e.message.slice(0,20));
-      uploadedText += '\n[無法讀取：'+name+']';
-    }
+        uploadedText += t; ok();
+      } else if(ext==='pdf'){
+        const bytes=new Uint8Array(await f.arrayBuffer());
+        let bin=''; bytes.forEach(b=>bin+=String.fromCharCode(b));
+        uploadedImages.push({name,base64:btoa(bin),mimeType:'application/pdf',type:'document'});
+        uploadedText+='\n【PDF：'+name+'（圖像傳給 AI 解讀）】'; ok();
+      } else if(['jpg','jpeg','png','gif','webp','bmp'].includes(ext)){
+        const mimes={jpg:'image/jpeg',jpeg:'image/jpeg',png:'image/png',gif:'image/gif',webp:'image/webp',bmp:'image/bmp'};
+        const b64=await new Promise((res,rej)=>{ const r=new FileReader(); r.onload=e=>res(e.target.result.split(',')[1]); r.onerror=rej; r.readAsDataURL(f); });
+        uploadedImages.push({name,base64:b64,mimeType:mimes[ext]||'image/jpeg',type:'image'});
+        uploadedText+='\n【圖片：'+name+'（AI 將以圖像方式解讀）】'; ok();
+      } else { err('不支援'); }
+    } catch(e){ err(e.message.slice(0,20)); uploadedText+='\n[無法讀取：'+name+']'; }
   }
 }
 
@@ -1084,46 +921,27 @@ function parseResponse(text) {
 // ══════════════════════════════════════════════════════════
 async function callClaude(system, user) {
   const key = ls('key_claude');
-  if (!key) throw new Error('Claude API 金鑰未設定，請點右上角「API 金鑰設定」輸入金鑰');
-
-  // Build message content: text + any uploaded images/PDFs
+  if (!key) throw new Error('Claude API 金鑰未設定');
   const userContent = [];
-  // Add uploaded image/PDF blocks (max 5 to avoid token overflow)
   if (uploadedImages && uploadedImages.length) {
-    uploadedImages.slice(0, 5).forEach(img => {
-      if (img.type === 'document') {
-        userContent.push({
-          type: 'document',
-          source: { type: 'base64', media_type: img.mimeType, data: img.base64 }
-        });
-      } else {
-        userContent.push({
-          type: 'image',
-          source: { type: 'base64', media_type: img.mimeType, data: img.base64 }
-        });
-      }
+    uploadedImages.slice(0,5).forEach(img => {
+      userContent.push(img.type==='document'
+        ? {type:'document', source:{type:'base64', media_type:img.mimeType, data:img.base64}}
+        : {type:'image',    source:{type:'base64', media_type:img.mimeType, data:img.base64}});
     });
   }
-  userContent.push({ type: 'text', text: user });
-
+  userContent.push({type:'text', text:user});
   const res = await fetch('/api/anthropic/v1/messages', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-api-key': key,
-      'anthropic-version': '2023-06-01',
-      'anthropic-dangerous-direct-browser-access': 'true'
-    },
-    body: JSON.stringify({
-      model: 'claude-sonnet-4-20250514',
-      max_tokens: 4096,
-      system,
-      tools: [{ type: 'web_search_20250305', name: 'web_search' }],
-      messages: [{ role: 'user', content: userContent }]
-    })
+    method:'POST',
+    headers:{'Content-Type':'application/json','x-api-key':key,
+             'anthropic-version':'2023-06-01',
+             'anthropic-dangerous-direct-browser-access':'true'},
+    body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:4096,system,
+      tools:[{type:'web_search_20250305',name:'web_search'}],
+      messages:[{role:'user',content:userContent}]})
   });
   const data = await res.json();
-  if (data.error) throw new Error('Claude: ' + data.error.message);
+  if(data.error) throw new Error('Claude: '+data.error.message);
   return data.content.filter(b=>b.type==='text').map(b=>b.text).join('\n');
 }
 
@@ -1134,28 +952,21 @@ async function callGemini(system, user) {
   const key = ls('key_gemini');
   if (!key) throw new Error('Gemini API 金鑰未設定');
   const parts = [];
-  // Add images for Gemini Vision
   if (uploadedImages && uploadedImages.length) {
-    uploadedImages.slice(0, 5).forEach(img => {
-      if (img.type === 'image') {
-        parts.push({ inline_data: { mime_type: img.mimeType, data: img.base64 } });
-      }
+    uploadedImages.slice(0,5).forEach(img => {
+      if(img.type==='image') parts.push({inline_data:{mime_type:img.mimeType,data:img.base64}});
     });
   }
-  parts.push({ text: system + '\n\n' + user });
+  parts.push({text: system+'\n\n'+user});
   const res = await fetch(`/api/gemini/v1beta/models/gemini-2.0-flash:generateContent?key=${key}`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      contents: [{ parts }],
-      generationConfig: { maxOutputTokens: 4096, temperature: 0.7 }
-    })
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({contents:[{parts}], generationConfig:{maxOutputTokens:4096,temperature:0.7}})
   });
   const data = await res.json();
-  if (data.error) throw new Error('Gemini: ' + data.error.message);
-  const resParts = data.candidates?.[0]?.content?.parts;
-  if (!resParts) throw new Error('Gemini: 回應格式錯誤');
-  return resParts.map(p=>p.text||'').join('\n');
+  if(data.error) throw new Error('Gemini: '+data.error.message);
+  const rp = data.candidates?.[0]?.content?.parts;
+  if(!rp) throw new Error('Gemini: 回應格式錯誤');
+  return rp.map(p=>p.text||'').join('\n');
 }
 
 // ══════════════════════════════════════════════════════════
@@ -1164,36 +975,23 @@ async function callGemini(system, user) {
 async function callGPT(system, user) {
   const key = ls('key_gpt');
   if (!key) throw new Error('ChatGPT API 金鑰未設定');
-  // Build user message content with images
-  let userMsg;
+  let userMsg = user;
   if (uploadedImages && uploadedImages.length > 0) {
-    userMsg = [{ type: 'text', text: user }];
-    uploadedImages.slice(0, 5).forEach(img => {
-      if (img.type === 'image') {
-        userMsg.push({
-          type: 'image_url',
-          image_url: { url: `data:${img.mimeType};base64,${img.base64}`, detail: 'high' }
-        });
-      }
+    userMsg = [{type:'text',text:user}];
+    uploadedImages.slice(0,5).forEach(img => {
+      if(img.type==='image') userMsg.push({type:'image_url',
+        image_url:{url:`data:${img.mimeType};base64,${img.base64}`,detail:'high'}});
     });
-  } else {
-    userMsg = user;
   }
   const res = await fetch('/api/openai/v1/chat/completions', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + key },
-    body: JSON.stringify({
-      model: 'gpt-4o',
-      max_tokens: 4096,
-      messages: [
-        { role: 'system', content: system },
-        { role: 'user',   content: userMsg }
-      ]
-    })
+    method:'POST',
+    headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},
+    body:JSON.stringify({model:'gpt-4o',max_tokens:4096,
+      messages:[{role:'system',content:system},{role:'user',content:userMsg}]})
   });
   const data = await res.json();
-  if (data.error) throw new Error('ChatGPT: ' + data.error.message);
-  return data.choices?.[0]?.message?.content || '';
+  if(data.error) throw new Error('ChatGPT: '+data.error.message);
+  return data.choices?.[0]?.message?.content||'';
 }
 
 // ══════════════════════════════════════════════════════════
@@ -1206,7 +1004,7 @@ async function synthesize(versions, vals) {
     versionBlock += `\n\n══ ${names[ai]||ai} 版本 ══\n${text.slice(0, 3000)}`;
   });
 
-  const synthSystem = '你是高雄市議會的資深主編，負責整合多 AI 文稿。';
+  const synthSys='你是高雄市議會的資深主編，負責整合多 AI 文稿。';
   const synthPrompt = `你是高雄市議會的資深主編，現在有多個 AI 各自產出的致詞稿與新聞稿版本。
 請整合各版本的優點：取最精確的資訊、最流暢的語句、最完整的段落，產出一份品質最高的最終版本。
 
@@ -1229,16 +1027,10 @@ async function synthesize(versions, vals) {
 （最終新聞稿）
 ===新聞稿END===`;
 
-  // Use Claude if available, otherwise fall back to Gemini or GPT
-  if (ls('key_claude')) {
-    return await callClaude(synthSystem, synthPrompt);
-  } else if (ls('key_gemini')) {
-    return await callGemini(synthSystem, synthPrompt);
-  } else if (ls('key_gpt')) {
-    return await callGPT(synthSystem, synthPrompt);
-  } else {
-    throw new Error('無可用的 AI 金鑰進行整合');
-  }
+  if(ls('key_claude'))      return await callClaude(synthSys, synthPrompt);
+  else if(ls('key_gemini')) return await callGemini(synthSys, synthPrompt);
+  else if(ls('key_gpt'))    return await callGPT(synthSys, synthPrompt);
+  else throw new Error('無可用金鑰');
 }
 
 // ══════════════════════════════════════════════════════════
@@ -1361,1499 +1153,37 @@ async function generate() {
 async function factCheck() {
   const speech = document.getElementById('speechDoc').innerText.trim();
   const press  = document.getElementById('pressDoc').innerText.trim();
-  if (!speech && !press) { setStatus('⚠ 請先產生文稿', 'err'); return; }
-
+  if(!speech && !press){ setStatus('⚠ 請先產生文稿','err'); return; }
   const factBtn = document.getElementById('factBtn');
-  factBtn.disabled = true;
-  factBtn.innerHTML = '<div class="spin" style="width:13px;height:13px;border-width:2px;display:inline-block;margin-right:4px"></div> 查核中...';
-  setStatus('🔍 正在查核人名、職稱、時間、地點、數字...', 'warn');
-  document.getElementById('factBox').className = 'fact-box';
-
-  const factPrompt = `請仔細閱讀以下致詞稿與新聞稿，主動上網搜尋後進行完整事實查核。
-
-查核項目：
-1. 人名與職稱是否正確（組織職銜、個人身分）
-2. 組織名稱、創立年份、歷史背景是否正確
-3. 數字（年份、金額、統計）是否正確
-4. 時間、地點名稱是否正確
-5. 引述語句是否合理
-6. 任何模糊或可能有誤的陳述
-
-請以以下格式輸出：
-
-━━━━━━━━━━━━━━━━━━━━━━
+  factBtn.disabled=true;
+  factBtn.innerHTML='<div class="spin" style="width:13px;height:13px;border-width:2px;display:inline-block;margin-right:4px"></div> 查核中...';
+  setStatus('🔍 正在查核人名、職稱、時間、地點、數字...','warn');
+  document.getElementById('factBox').className='fact-box';
+  const prompt=`請仔細閱讀以下致詞稿與新聞稿，主動上網搜尋後進行完整事實查核。
+查核：人名職稱、組織名稱年份、數字、時間地點、引述語句。
+格式：
+━━━━━━━━━━━━━━━━━
 【事實查核報告】
-━━━━━━━━━━━━━━━━━━━━━━
-✅ 確認正確
-（每條一行）
-
-⚠️ 需注意／無法確認
-（列出疑慮及原因）
-
-❌ 發現錯誤
-（列出錯誤並提供正確資訊）
-
+✅ 確認正確：（逐條）
+⚠️ 需注意：（逐條）
+❌ 發現錯誤：（逐條，含正確資訊）
 【修改建議】
-━━━━━━━━━━━━━━━━━━━━━━
-
+━━━━━━━━━━━━━━━━━
 ---致詞稿---
 ${speech.slice(0,3000)}
-
 ---新聞稿---
 ${press.slice(0,3000)}`;
-
   try {
-    let result = '';
-    // Use best available AI for fact check
-    if (ls('key_claude')) {
-      const res = await fetch('/api/anthropic/v1/messages', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-api-key': ls('key_claude'),
-          'anthropic-version': '2023-06-01',
-          'anthropic-dangerous-direct-browser-access': 'true'
-        },
-        body: JSON.stringify({
-          model: 'claude-sonnet-4-20250514', max_tokens: 2048,
-          tools: [{ type: 'web_search_20250305', name: 'web_search' }],
-          messages: [{ role: 'user', content: factPrompt }]
-        })
-      });
-      const data = await res.json();
-      if (data.error) throw new Error(data.error.message);
-      result = data.content.filter(b=>b.type==='text').map(b=>b.text).join('\n');
-    } else if (ls('key_gemini')) {
-      result = await callGemini('你是專業事實查核員，請仔細查核以下文稿內容。', factPrompt);
-    } else if (ls('key_gpt')) {
-      result = await callGPT('你是專業事實查核員，請仔細查核以下文稿內容。', factPrompt);
-    } else {
-      throw new Error('請先設定至少一個 AI 金鑰');
-    }
-    const fb = document.getElementById('factBox');
-    fb.textContent = result; fb.className = 'fact-box show';
-    setStatus('✓ 事實查核完成，詳見下方報告。', 'ok');
-  } catch(e) { setStatus('✗ 查核失敗：'+e.message, 'err'); }
-  factBtn.disabled = false; factBtn.innerHTML = '🔍 事實查核';TF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>高雄市議會文稿產生器</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<style>
-@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;600;700&family=Noto+Sans+TC:wght@300;400;500;700&display=swap');
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-:root{
-  --red:#b5202a;--red-d:#8c1820;--red-l:#fdf0f0;
-  --gold:#a87218;--gold-l:#fdf8ec;
-  --bg:#f0ede6;--card:#fff;--text:#1a1a1a;
-  --muted:#666;--border:#ddd;--br:10px;
-  --green:#1e7e45;--blue:#1a5580;
-  --purple:#6b21a8;--purple-l:#faf5ff;
-  --claude:#b5202a;--gemini:#1a73e8;--gpt:#10a37f;
-}
-body{font-family:'Noto Sans TC',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:14px}
-
-/* ── HEADER ── */
-.hdr{background:var(--red);border-bottom:4px solid var(--gold);position:sticky;top:0;z-index:200;box-shadow:0 2px 12px rgba(0,0,0,.2)}
-.hdr-in{max-width:1540px;margin:0 auto;padding:11px 22px;display:flex;align-items:center;gap:13px}
-.hdr-logo{width:44px;height:44px;background:rgba(255,255,255,.95);border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0}
-.hdr-t{font-family:'Noto Serif TC',serif;color:#fff;font-size:19px;font-weight:700;letter-spacing:1.5px}
-.hdr-s{color:rgba(255,255,255,.75);font-size:11px;margin-top:1px}
-.hdr-right{margin-left:auto;display:flex;align-items:center;gap:8px}
-.hdr-badge{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:rgba(255,255,255,.9);font-size:10px;padding:3px 9px;border-radius:11px;letter-spacing:.5px}
-.hdr-settings-btn{background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.3);color:#fff;font-size:12px;padding:5px 12px;border-radius:7px;cursor:pointer;font-family:'Noto Sans TC',sans-serif;display:flex;align-items:center;gap:5px;transition:background .15s}
-.hdr-settings-btn:hover{background:rgba(255,255,255,.28)}
-
-/* ── LAYOUT ── */
-.main{max-width:1540px;margin:0 auto;padding:18px 18px 50px}
-
-/* ── PANEL ── */
-.panel{background:var(--card);border-radius:var(--br);border:1px solid var(--border);margin-bottom:14px;box-shadow:0 1px 4px rgba(0,0,0,.04)}
-.panel-hd{padding:11px 18px 10px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;background:#fafaf8;border-radius:var(--br) var(--br) 0 0}
-.ph-bar{width:4px;height:17px;background:var(--red);border-radius:2px;flex-shrink:0}
-.panel-hd h2{font-family:'Noto Serif TC',serif;font-size:14px;font-weight:700;color:var(--red)}
-.ph-note{margin-left:auto;font-size:11px;color:var(--muted)}
-.panel-bd{padding:16px 18px}
-
-/* ── SETTINGS MODAL ── */
-.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:500;display:none;align-items:center;justify-content:center}
-.modal-bg.open{display:flex}
-.modal{background:#fff;border-radius:12px;width:min(600px,95vw);max-height:90vh;overflow-y:auto;box-shadow:0 8px 40px rgba(0,0,0,.25)}
-.modal-hd{padding:16px 20px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
-.modal-hd h3{font-family:'Noto Serif TC',serif;font-size:16px;font-weight:700;color:var(--red)}
-.modal-close{background:none;border:none;font-size:20px;cursor:pointer;color:var(--muted);line-height:1;padding:2px 6px;border-radius:4px;transition:background .15s}
-.modal-close:hover{background:#eee}
-.modal-bd{padding:18px 20px}
-.modal-section{margin-bottom:18px}
-.modal-section-title{font-size:12px;font-weight:700;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--border)}
-.ai-key-row{display:grid;grid-template-columns:auto 1fr auto;gap:8px;align-items:center;margin-bottom:8px}
-.ai-key-label{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600;white-space:nowrap}
-.ai-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
-.dot-claude{background:var(--claude)}.dot-gemini{background:var(--gemini)}.dot-gpt{background:var(--gpt)}
-.ai-key-input{border:1px solid var(--border);border-radius:6px;padding:7px 10px;font-size:12px;font-family:monospace;color:var(--text);transition:border-color .15s;background:#fff}
-.ai-key-input:focus{outline:none;border-color:var(--blue)}
-.key-status{font-size:10px;padding:3px 7px;border-radius:4px;white-space:nowrap}
-.key-ok{background:#d1fae5;color:#065f46}.key-no{background:#fee2e2;color:#991b1b}.key-na{background:#f3f4f6;color:#6b7280}
-.modal-note{font-size:11.5px;color:var(--muted);line-height:1.7;background:#f9f9f7;border-radius:6px;padding:9px 12px;margin-top:10px}
-.modal-save-btn{width:100%;background:var(--red);color:#fff;border:none;border-radius:7px;padding:10px;font-size:13px;font-family:'Noto Sans TC',sans-serif;font-weight:700;cursor:pointer;transition:background .15s;margin-top:4px}
-.modal-save-btn:hover{background:var(--red-d)}
-
-/* ── AI MODE SELECTOR ── */
-.ai-mode-panel{background:linear-gradient(135deg,#1a1a2e 0%,#16213e 100%);border-radius:var(--br);padding:16px 20px;margin-bottom:14px;border:1px solid #2a2a4a}
-.ai-mode-title{color:rgba(255,255,255,.55);font-size:11px;letter-spacing:1px;text-transform:uppercase;margin-bottom:12px;font-weight:600}
-.ai-mode-row{display:flex;gap:10px;flex-wrap:wrap;align-items:stretch}
-.ai-chip{display:flex;align-items:center;gap:9px;padding:9px 16px;border-radius:9px;cursor:pointer;transition:all .2s;border:1.5px solid rgba(255,255,255,.12);user-select:none;background:rgba(255,255,255,.06);min-width:140px}
-.ai-chip:hover:not(.chip-disabled){border-color:rgba(255,255,255,.28);background:rgba(255,255,255,.1)}
-.ai-chip-checkbox{width:17px;height:17px;border-radius:4px;border:2px solid rgba(255,255,255,.3);display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .2s;background:transparent}
-.ai-chip-checkbox .ck{display:none;font-size:11px;font-weight:900;line-height:1}
-.ai-chip-logo{width:22px;height:22px;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff;flex-shrink:0}
-.chip-claude .ai-chip-logo{background:var(--claude)}
-.chip-gemini .ai-chip-logo{background:var(--gemini)}
-.chip-gpt    .ai-chip-logo{background:var(--gpt)}
-.ai-chip-info{display:flex;flex-direction:column;gap:1px}
-.ai-chip .chip-label{font-size:13px;font-weight:600;color:rgba(255,255,255,.5);transition:color .2s}
-.ai-chip .chip-sub{font-size:10px;color:rgba(255,255,255,.28);transition:color .2s}
-.chip-disabled{opacity:.32;cursor:not-allowed!important}
-.chip-disabled .chip-label::after{content:' (未設定金鑰)';font-size:9px;opacity:.7}
-.ai-chip.active .ai-chip-checkbox{border-color:currentColor;background:currentColor}
-.ai-chip.active .ai-chip-checkbox .ck{display:block;color:#fff}
-.chip-claude.active{border-color:rgba(220,80,80,.7);background:rgba(181,32,42,.2)}
-.chip-claude.active .chip-label{color:#ff9090}
-.chip-claude.active .chip-sub{color:rgba(255,144,144,.6)}
-.chip-gemini.active{border-color:rgba(80,150,255,.7);background:rgba(26,115,232,.18)}
-.chip-gemini.active .chip-label{color:#7ab4ff}
-.chip-gemini.active .chip-sub{color:rgba(122,180,255,.6)}
-.chip-gpt.active{border-color:rgba(16,163,127,.7);background:rgba(16,163,127,.18)}
-.chip-gpt.active .chip-label{color:#6be0c8}
-.chip-gpt.active .chip-sub{color:rgba(107,224,200,.6)}
-.ai-mode-divider{display:flex;align-items:center;color:rgba(255,255,255,.18);font-size:18px;padding:0 2px;align-self:center}
-.ai-synth-chip{display:flex;align-items:center;gap:9px;padding:9px 16px;border-radius:9px;cursor:pointer;transition:all .2s;border:1.5px dashed rgba(255,200,50,.25);user-select:none;background:rgba(255,200,50,.04);min-width:190px}
-.ai-synth-chip:hover{border-color:rgba(255,200,50,.5);background:rgba(255,200,50,.09)}
-.ai-synth-checkbox{width:17px;height:17px;border-radius:4px;border:2px solid rgba(255,200,50,.3);display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .2s}
-.ai-synth-checkbox .ck{display:none;font-size:11px;font-weight:900;line-height:1;color:#1a1a2e}
-.ai-synth-chip.active .ai-synth-checkbox{background:#ffd750;border-color:#ffd750}
-.ai-synth-chip.active .ai-synth-checkbox .ck{display:block}
-.ai-synth-icon{font-size:18px;flex-shrink:0}
-.ai-synth-info{display:flex;flex-direction:column;gap:1px}
-.ai-synth-chip .synth-label{font-size:13px;font-weight:600;color:rgba(255,200,50,.55);transition:color .2s}
-.ai-synth-chip .synth-sub{font-size:10px;color:rgba(255,200,50,.32);transition:color .2s}
-.ai-synth-chip.active .synth-label{color:rgba(255,220,80,.95)}
-.ai-synth-chip.active .synth-sub{color:rgba(255,220,80,.6)}
-.ai-mode-help{color:rgba(255,255,255,.3);font-size:10.5px;margin-top:10px;line-height:1.65;border-top:1px solid rgba(255,255,255,.07);padding-top:9px}
-
-/* ── GRID ── */
-.g5{display:grid;grid-template-columns:repeat(5,1fr);gap:11px}
-.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:11px}
-.g3{display:grid;grid-template-columns:repeat(3,1fr);gap:11px}
-.g2{display:grid;grid-template-columns:1fr 1fr;gap:11px}
-.s2{grid-column:span 2}.s3{grid-column:span 3}.sa{grid-column:1/-1}
-
-/* ── FIELDS ── */
-.fld{display:flex;flex-direction:column;gap:4px}
-.fld label{font-size:11px;font-weight:500;color:var(--muted)}
-.fld input,.fld select,.fld textarea{border:1px solid var(--border);border-radius:6px;padding:7px 10px;font-family:'Noto Sans TC',sans-serif;font-size:13px;color:var(--text);background:#fff;transition:border-color .15s,box-shadow .15s;line-height:1.5}
-.fld input:focus,.fld select:focus,.fld textarea:focus{outline:none;border-color:var(--red);box-shadow:0 0 0 3px rgba(181,32,42,.07)}
-.fld textarea{resize:vertical;min-height:68px}
-
-/* ── GUEST ── */
-.guest-list{display:flex;flex-direction:column;gap:5px}
-.g-row{display:grid;grid-template-columns:190px 1fr 32px;gap:6px;align-items:center}
-.g-row input{border:1px solid var(--border);border-radius:6px;padding:6px 9px;font-size:12px;font-family:'Noto Sans TC',sans-serif;color:var(--text);transition:border-color .15s}
-.g-row input:focus{outline:none;border-color:var(--red)}
-.del-btn{background:none;border:1px solid #e0e0e0;border-radius:5px;padding:5px 0;color:#bbb;cursor:pointer;font-size:13px;transition:all .15s;line-height:1}
-.del-btn:hover{border-color:var(--red);color:var(--red);background:var(--red-l)}
-.add-btn{background:none;border:1.5px dashed #ccc;border-radius:6px;padding:7px 14px;font-size:12px;color:var(--muted);cursor:pointer;display:inline-flex;align-items:center;gap:5px;margin-top:6px;transition:all .15s;font-family:'Noto Sans TC',sans-serif}
-.add-btn:hover{border-color:var(--red);color:var(--red);background:var(--red-l)}
-
-/* ── UPLOAD ── */
-.upload-z{border:2px dashed #ccc;border-radius:8px;padding:12px 16px;text-align:center;cursor:pointer;transition:all .2s;background:#fafaf8}
-.upload-z:hover{border-color:var(--red);background:var(--red-l)}
-.upload-z.ok{border-color:var(--green);background:#f0fff5;border-style:solid}
-.u-icon{font-size:20px}.u-text{font-size:12px;color:var(--muted);margin-top:3px}.u-sub{font-size:11px;color:#aaa;margin-top:2px}.u-files{font-size:11px;color:var(--green);margin-top:5px;font-weight:500}
-.u-types{display:flex;gap:5px;flex-wrap:wrap;justify-content:center;margin-top:7px}
-.u-type-tag{font-size:10px;padding:2px 7px;border-radius:4px;font-weight:600;letter-spacing:.3px}
-.tag-word{background:#dbeafe;color:#1e40af}.tag-excel{background:#dcfce7;color:#166534}
-.tag-ppt{background:#ffedd5;color:#9a3412}.tag-pdf{background:#fee2e2;color:#991b1b}
-.tag-img{background:#f3e8ff;color:#6b21a8}.tag-txt{background:#f3f4f6;color:#374151}
-.file-preview-list{margin-top:8px;display:flex;flex-direction:column;gap:4px;text-align:left;max-height:100px;overflow-y:auto}
-.file-preview-item{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text);background:#f8f8f8;border-radius:5px;padding:3px 8px}
-.file-preview-icon{font-size:13px;flex-shrink:0}
-.file-preview-name{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.file-preview-status{font-size:10px;color:var(--green);flex-shrink:0}
-.file-preview-status.loading{color:var(--gold)}
-.file-preview-status.err{color:var(--red)}
-
-/* ── HINT ── */
-.hint{background:var(--gold-l);border-left:3px solid var(--gold);border-radius:0 5px 5px 0;padding:9px 13px;font-size:11.5px;color:#5a4210;line-height:1.75;margin-top:12px}
-
-/* ── DIVIDER ── */
-.divider{display:flex;align-items:center;gap:10px;margin:13px 0 9px;font-size:11px;color:var(--muted);font-weight:500;letter-spacing:.5px}
-.divider::before,.divider::after{content:'';flex:1;height:1px;background:var(--border)}
-
-/* ── BUTTONS ── */
-.btn-row{display:flex;gap:9px;align-items:center;margin-top:14px;flex-wrap:wrap}
-.btn-gen{background:var(--red);color:#fff;border:none;border-radius:8px;padding:11px 26px;font-size:14px;font-family:'Noto Sans TC',sans-serif;font-weight:700;cursor:pointer;letter-spacing:.5px;display:flex;align-items:center;gap:7px;transition:background .15s,transform .1s;box-shadow:0 2px 8px rgba(181,32,42,.25)}
-.btn-gen:hover:not(:disabled){background:var(--red-d)}.btn-gen:active:not(:disabled){transform:scale(.98)}.btn-gen:disabled{opacity:.5;cursor:not-allowed;box-shadow:none}
-.btn-fact{background:#fff;color:var(--blue);border:1.5px solid var(--blue);border-radius:8px;padding:10px 18px;font-size:13px;font-family:'Noto Sans TC',sans-serif;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:6px;transition:all .15s}
-.btn-fact:hover:not(:disabled){background:#eaf2fb}.btn-fact:disabled{opacity:.35;cursor:not-allowed}
-.btn-sec{background:none;color:var(--muted);border:1px solid var(--border);border-radius:7px;padding:10px 14px;font-size:12px;font-family:'Noto Sans TC',sans-serif;cursor:pointer;display:flex;align-items:center;gap:5px;transition:all .15s}
-.btn-sec:hover{border-color:var(--muted);color:var(--text)}
-
-/* ── STATUS ── */
-.status{border-radius:7px;padding:8px 13px;font-size:12px;display:none;margin-top:10px;line-height:1.6}
-.status.show{display:block}
-.status.ok{background:#f0fff5;border:1px solid #9dd3b0;color:#1a5e30}
-.status.err{background:var(--red-l);border:1px solid #f0a0a0;color:var(--red-d)}
-.status.warn{background:#fffbea;border:1px solid #e8c84a;color:#7a5500}
-
-/* ── AI PROGRESS ── */
-.ai-progress-box{display:none;margin-top:12px;background:#1a1a2e;border-radius:8px;padding:12px 14px;gap:8px;flex-direction:column}
-.ai-progress-box.show{display:flex}
-.ai-prog-row{display:flex;align-items:center;gap:10px}
-.ai-prog-label{font-size:11px;font-weight:600;width:80px;flex-shrink:0}
-.label-claude{color:#ff8a8a}.label-gemini{color:#7ab4ff}.label-gpt{color:#6be0c8}.label-synth{color:#ffd750}
-.ai-prog-bar-outer{flex:1;background:rgba(255,255,255,.1);border-radius:99px;height:5px;overflow:hidden}
-.ai-prog-bar-inner{height:100%;border-radius:99px;transition:width .5s ease;width:0%}
-.bar-claude{background:var(--claude)}.bar-gemini{background:var(--gemini)}.bar-gpt{background:var(--gpt)}.bar-synth{background:#ffd750}
-.ai-prog-status{font-size:10px;color:rgba(255,255,255,.45);width:70px;text-align:right;flex-shrink:0}
-
-/* ── COLUMNS ── */
-.cols{display:grid;grid-template-columns:1fr 1fr;gap:14px}
-
-/* ── DOC PANEL ── */
-.doc-p{background:var(--card);border-radius:var(--br);border:1px solid var(--border);display:flex;flex-direction:column;min-height:650px;box-shadow:0 1px 4px rgba(0,0,0,.04)}
-.doc-hd{padding:11px 15px 9px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:#fafaf8;border-radius:var(--br) var(--br) 0 0;flex-wrap:wrap;gap:6px}
-.doc-title{font-family:'Noto Serif TC',serif;font-size:14px;font-weight:700;display:flex;align-items:center;gap:7px;flex-wrap:wrap}
-.badge{font-size:10px;font-weight:600;padding:2px 7px;border-radius:10px;letter-spacing:.5px}
-.b-speech{background:#fdf6e3;color:#956e10;border:1px solid #e8d580}
-.b-press{background:#fde8e8;color:var(--red);border:1px solid #f0b8b8}
-.doc-ai-badges{display:flex;gap:4px;margin-top:2px}
-.ai-source-badge{font-size:9px;padding:1px 6px;border-radius:5px;font-weight:600;letter-spacing:.3px}
-.asb-claude{background:rgba(181,32,42,.1);color:var(--claude);border:1px solid rgba(181,32,42,.3)}
-.asb-gemini{background:rgba(26,115,232,.1);color:var(--gemini);border:1px solid rgba(26,115,232,.3)}
-.asb-gpt{background:rgba(16,163,127,.1);color:var(--gpt);border:1px solid rgba(16,163,127,.3)}
-.asb-synth{background:rgba(255,215,0,.1);color:#b8860b;border:1px solid rgba(255,215,0,.4)}
-.doc-tools{display:flex;gap:5px;flex-shrink:0}
-.tb{border:1px solid var(--border);background:#fff;border-radius:5px;padding:4px 8px;font-size:11px;cursor:pointer;color:var(--muted);font-family:'Noto Sans TC',sans-serif;display:flex;align-items:center;gap:3px;transition:all .15s}
-.tb:hover{border-color:var(--red);color:var(--red);background:var(--red-l)}
-.doc-body{flex:1;padding:16px 18px;font-family:'Noto Serif TC',serif;font-size:13.5px;line-height:2.1;color:var(--text);overflow-y:auto;white-space:pre-wrap;outline:none}
-.doc-body.ph{font-family:'Noto Sans TC',sans-serif;font-size:12px;line-height:1.8;color:#bbb}
-.doc-body[contenteditable="true"]:focus{box-shadow:inset 0 0 0 2px rgba(181,32,42,.06)}
-.doc-ft{padding:9px 15px;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:#fafaf8;border-radius:0 0 var(--br) var(--br);gap:8px;flex-wrap:wrap}
-.wc{font-size:11px;color:var(--muted)}
-.dl{background:#2c3e50;color:#fff;border:none;border-radius:6px;padding:7px 14px;font-size:12px;font-family:'Noto Sans TC',sans-serif;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:4px;transition:background .15s;white-space:nowrap}
-.dl:hover{background:#1a252f}.dl:disabled{opacity:.35;cursor:not-allowed}
-
-/* ── AI RAW DRAWER ── */
-.ai-raw-toggle{background:none;border:1px solid var(--border);border-radius:5px;padding:4px 9px;font-size:11px;cursor:pointer;color:var(--muted);display:flex;align-items:center;gap:4px;transition:all .15s}
-.ai-raw-toggle:hover{border-color:var(--blue);color:var(--blue)}
-.ai-raw-drawer{display:none;background:#f8f8fc;border:1px solid #dde;border-radius:0 0 var(--br) var(--br);overflow:hidden}
-.ai-raw-drawer.open{display:block}
-.ai-raw-tabs{display:flex;border-bottom:1px solid #dde;background:#f0f0f8}
-.ai-raw-tab{padding:7px 14px;font-size:11px;cursor:pointer;color:var(--muted);border-right:1px solid #dde;transition:all .15s;font-family:'Noto Sans TC',sans-serif;font-weight:500;border-bottom:2px solid transparent}
-.ai-raw-tab:hover{background:#e8e8f0;color:var(--text)}
-.ai-raw-tab.active{color:var(--blue);border-bottom-color:var(--blue);background:#fff}
-.ai-raw-content{padding:12px 14px;max-height:300px;overflow-y:auto;white-space:pre-wrap;font-family:'Noto Serif TC',serif;font-size:12px;line-height:1.9;color:#333}
-
-/* ── LOADING ── */
-.ld{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:60px 20px;color:var(--muted);font-size:12px}
-.spin{width:26px;height:26px;border:2.5px solid #eee;border-top-color:var(--red);border-radius:50%;animation:spin .85s linear infinite}
-@keyframes spin{to{transform:rotate(360deg)}}
-
-/* ── FACT BOX ── */
-.fact-box{background:#eaf2fb;border:1px solid #b0cce8;border-radius:8px;padding:14px 17px;font-size:12.5px;line-height:1.85;color:#1a3a5c;margin-top:12px;display:none;white-space:pre-wrap}
-.fact-box.show{display:block}
-
-/* ── SCROLLBAR ── */
-.doc-body::-webkit-scrollbar,.ai-raw-content::-webkit-scrollbar{width:5px}
-.doc-body::-webkit-scrollbar-track,.ai-raw-content::-webkit-scrollbar-track{background:transparent}
-.doc-body::-webkit-scrollbar-thumb,.ai-raw-content::-webkit-scrollbar-thumb{background:#ddd;border-radius:3px}
-
-/* ── RESPONSIVE ── */
-@media(max-width:1200px){.g5{grid-template-columns:repeat(3,1fr)}}
-@media(max-width:960px){.cols{grid-template-columns:1fr}.g5{grid-template-columns:repeat(2,1fr)}.g4{grid-template-columns:repeat(2,1fr)}.s3{grid-column:span 2}}
-@media(max-width:640px){.g5,.g4,.g3,.g2{grid-template-columns:1fr}.s2,.s3,.sa{grid-column:span 1}.g-row{grid-template-columns:1fr 1fr 32px}.hdr-badge{display:none}.ai-mode-row{flex-wrap:wrap}}
-</style>
-</head>
-<body>
-
-<!-- ═══════ HEADER ═══════ -->
-<div class="hdr">
-  <div class="hdr-in">
-    <div class="hdr-logo">
-      <svg width="30" height="30" viewBox="0 0 30 30" fill="none">
-        <circle cx="15" cy="15" r="13" stroke="#b5202a" stroke-width="1.8"/>
-        <text x="15" y="21" text-anchor="middle" font-size="14" font-family="Noto Serif TC,serif" fill="#b5202a" font-weight="700">議</text>
-      </svg>
-    </div>
-    <div>
-      <div class="hdr-t">高雄市議會 文稿產生器</div>
-      <div class="hdr-s">多 AI 協作致詞稿 ・ 新聞稿產出系統</div>
-    </div>
-    <div class="hdr-right">
-      <div class="hdr-badge">v3.0 Multi-AI</div>
-      <button class="hdr-settings-btn" onclick="openSettings()">⚙️ API 金鑰設定</button>
-    </div>
-  </div>
-</div>
-
-<!-- ═══════ SETTINGS MODAL ═══════ -->
-<div class="modal-bg" id="settingsModal">
-  <div class="modal">
-    <div class="modal-hd">
-      <h3>⚙️ AI 服務 API 金鑰設定</h3>
-      <button class="modal-close" onclick="closeSettings()">✕</button>
-    </div>
-    <div class="modal-bd">
-      <div class="modal-section">
-        <div class="modal-section-title">API Keys</div>
-
-        <div class="ai-key-row">
-          <div class="ai-key-label"><div class="ai-dot dot-claude"></div> Claude</div>
-          <input class="ai-key-input" type="password" id="key-claude" placeholder="sk-ant-..." autocomplete="off">
-          <span class="key-status" id="kstat-claude">—</span>
-        </div>
-        <div class="ai-key-row">
-          <div class="ai-key-label"><div class="ai-dot dot-gemini"></div> Gemini</div>
-          <input class="ai-key-input" type="password" id="key-gemini" placeholder="AIza..." autocomplete="off">
-          <span class="key-status" id="kstat-gemini">—</span>
-        </div>
-        <div class="ai-key-row">
-          <div class="ai-key-label"><div class="ai-dot dot-gpt"></div> ChatGPT</div>
-          <input class="ai-key-input" type="password" id="key-gpt" placeholder="sk-..." autocomplete="off">
-          <span class="key-status" id="kstat-gpt">—</span>
-        </div>
-      </div>
-
-      <div class="modal-section">
-        <div class="modal-section-title">整合模式說明</div>
-        <div class="modal-note">
-          <strong>單一 AI：</strong>使用所選 AI 直接產出文稿。<br>
-          <strong>多 AI 並行：</strong>同時呼叫多個 AI，各自獨立撰寫文稿，結果分頁顯示。<br>
-          <strong>✨ 多 AI + 智能整合：</strong>各 AI 先獨立撰寫，再由 Claude 擔任主編，彙整各版本的最佳段落，產出最終綜合版文稿。<br><br>
-          <strong>API 金鑰儲存於瀏覽器本機（localStorage），不會上傳至任何伺服器。</strong><br>
-          Claude API 金鑰可從 <a href="https://console.anthropic.com" target="_blank">console.anthropic.com</a> 取得；
-          Gemini 金鑰從 <a href="https://aistudio.google.com" target="_blank">aistudio.google.com</a>；
-          ChatGPT 金鑰從 <a href="https://platform.openai.com" target="_blank">platform.openai.com</a>。
-        </div>
-      </div>
-
-      <button class="modal-save-btn" onclick="saveSettings()">✓ 儲存設定</button>
-    </div>
-  </div>
-</div>
-
-<div class="main">
-
-  <!-- ═══════ AI MODE SELECTOR ═══════ -->
-  <div class="ai-mode-panel">
-    <div class="ai-mode-title">🤖 選擇 AI 模型（可單選或多選，勾選 2 個以上才能啟用智能整合）</div>
-    <div class="ai-mode-row" id="aiModeRow">
-
-      <div class="ai-chip chip-claude active" id="chip-claude" onclick="toggleChip('claude')">
-        <div class="ai-chip-checkbox" id="ckbox-claude"><span class="ck">✓</span></div>
-        <div class="ai-chip-logo">C</div>
-        <div class="ai-chip-info">
-          <span class="chip-label">Claude</span>
-          <span class="chip-sub">Sonnet 4</span>
-        </div>
-      </div>
-
-      <div class="ai-chip chip-gemini inactive chip-disabled" id="chip-gemini" onclick="toggleChip('gemini')">
-        <div class="ai-chip-checkbox" id="ckbox-gemini"><span class="ck">✓</span></div>
-        <div class="ai-chip-logo">G</div>
-        <div class="ai-chip-info">
-          <span class="chip-label">Gemini</span>
-          <span class="chip-sub">2.0 Flash</span>
-        </div>
-      </div>
-
-      <div class="ai-chip chip-gpt inactive chip-disabled" id="chip-gpt" onclick="toggleChip('gpt')">
-        <div class="ai-chip-checkbox" id="ckbox-gpt"><span class="ck">✓</span></div>
-        <div class="ai-chip-logo">⊕</div>
-        <div class="ai-chip-info">
-          <span class="chip-label">ChatGPT</span>
-          <span class="chip-sub">GPT-4o</span>
-        </div>
-      </div>
-
-      <div class="ai-mode-divider">｜</div>
-
-      <div class="ai-synth-chip" id="chip-synth" onclick="toggleSynth()">
-        <div class="ai-synth-checkbox" id="ckbox-synth"><span class="ck">✓</span></div>
-        <div class="ai-synth-icon">✨</div>
-        <div class="ai-synth-info">
-          <span class="synth-label">智能整合</span>
-          <span class="synth-sub">需勾選 2 個以上 AI</span>
-        </div>
-      </div>
-
-    </div>
-    <div class="ai-mode-help" id="aiModeHelp">✦ 單選：僅用該 AI 產稿　｜　多選 + 智能整合：各 AI 獨立撰寫，再由 Claude 彙整最佳版本　｜　請至右上角「⚙️ API 金鑰設定」輸入金鑰以啟用 Gemini / ChatGPT</div>
-  </div>
-
-  <!-- ═══════ 基本資料 ═══════ -->
-  <div class="panel">
-    <div class="panel-hd">
-      <div class="ph-bar"></div>
-      <h2>基本資料設定</h2>
-      <span class="ph-note">所有欄位皆為選填</span>
-    </div>
-    <div class="panel-bd">
-
-      <div class="g5" style="margin-bottom:13px">
-        <div class="fld"><label>致詞時間</label><input type="text" id="speechTime" placeholder="例：115/05/11(日) 19:00"></div>
-        <div class="fld"><label>地點</label><input type="text" id="location" placeholder="例：高雄市文化中心圓形廣場"></div>
-        <div class="fld"><label>撰稿時間</label><input type="text" id="draftTime" placeholder="例：115/04/09(四)10:00"></div>
-        <div class="fld"><label>撰稿</label><input type="text" id="drafter" placeholder="撰稿人姓名"></div>
-        <div class="fld"><label>拍照</label><input type="text" id="photographer" placeholder="拍照人姓名"></div>
-      </div>
-
-      <div class="g4" style="margin-bottom:13px">
-        <div class="fld s2"><label>活動 / 議題名稱</label><input type="text" id="eventName" placeholder="例：高雄市議會母親節活動－明華園戲劇總團演出《鴨母王》"></div>
-        <div class="fld"><label>活動類型</label>
-          <select id="eventType">
-            <option value="致詞">致詞</option><option value="記者會">記者會</option>
-            <option value="質詢">市政質詢</option><option value="視察">現場視察</option>
-            <option value="座談">市政座談</option><option value="典禮">開幕典禮</option>
-            <option value="頒獎">頒獎典禮</option><option value="其他">其他</option>
-          </select>
-        </div>
-        <div class="fld"><label>致詞人職稱</label><input type="text" id="speakerTitle" placeholder="例：議長"></div>
-      </div>
-
-      <div class="divider">出席來賓列表</div>
-      <div class="guest-list" id="guestList"></div>
-      <button class="add-btn" onclick="addGuest()">＋ 新增來賓</button>
-
-      <div class="divider" style="margin-top:15px">活動說明與背景</div>
-      <div class="g3">
-        <div class="fld s2"><label>主要訴求 / 活動重點</label><textarea id="keyPoints" placeholder="例：以傳統戲劇藝術禮讚母親，邀請明華園帶來《鴨母王》；感謝玉皇宮贊助及高雄市政府文化局、警察局協辦..."></textarea></div>
-        <div class="fld"><label>補充說明 / 背景資料</label><textarea id="background" placeholder="活動背景、相關數據、歷史資料、政策訴求等..."></textarea></div>
-      </div>
-
-      <div class="divider" style="margin-top:15px">上傳參考資料</div>
-      <div class="upload-z" id="uploadZ" onclick="document.getElementById('fi').click()">
-        <div class="u-icon">📎</div>
-        <div class="u-text">點擊上傳或拖曳檔案至此</div>
-        <div class="u-types">
-          <span class="u-type-tag tag-word">Word .docx</span>
-          <span class="u-type-tag tag-excel">Excel .xlsx</span>
-          <span class="u-type-tag tag-ppt">PowerPoint .pptx</span>
-          <span class="u-type-tag tag-pdf">PDF .pdf</span>
-          <span class="u-type-tag tag-img">圖片 JPG/PNG/WEBP</span>
-          <span class="u-type-tag tag-txt">文字 .txt</span>
-        </div>
-        <div class="u-files" id="fileTag"></div>
-        <div class="file-preview-list" id="filePreviewList"></div>
-      </div>
-      <input type="file" id="fi" multiple accept=".docx,.xlsx,.xls,.pptx,.ppt,.pdf,.txt,.jpg,.jpeg,.png,.gif,.webp,.bmp" style="display:none">
-
-      <div class="hint">
-        💡 <b>格式說明：</b>
-        <b>致詞稿</b>＝標頭（致詞時間／地點／撰稿）→ 活動標題 → 來賓稱謂 → 各段論述（● 開頭）；
-        <b>新聞稿</b>＝標題 →（高雄訊）導言 → 多段延伸報導（參考致詞稿論點＋搜尋資料）。
-        啟用「智能整合」時，Claude 會彙整多個 AI 版本，取長補短產出最終版。
-      </div>
-
-      <div class="btn-row">
-        <button class="btn-gen" id="genBtn" onclick="generate()">✦ AI 產生文稿</button>
-        <button class="btn-fact" id="factBtn" onclick="factCheck()" disabled>🔍 事實查核</button>
-        <button class="btn-sec" onclick="clearAll()">↺ 全部清除</button>
-      </div>
-
-      <!-- AI 進度顯示 -->
-      <div class="ai-progress-box" id="aiProgressBox">
-        <div class="ai-prog-row" id="prog-row-claude" style="display:none">
-          <span class="ai-prog-label label-claude">Claude</span>
-          <div class="ai-prog-bar-outer"><div class="ai-prog-bar-inner bar-claude" id="prog-bar-claude"></div></div>
-          <span class="ai-prog-status" id="prog-stat-claude">等待中</span>
-        </div>
-        <div class="ai-prog-row" id="prog-row-gemini" style="display:none">
-          <span class="ai-prog-label label-gemini">Gemini</span>
-          <div class="ai-prog-bar-outer"><div class="ai-prog-bar-inner bar-gemini" id="prog-bar-gemini"></div></div>
-          <span class="ai-prog-status" id="prog-stat-gemini">等待中</span>
-        </div>
-        <div class="ai-prog-row" id="prog-row-gpt" style="display:none">
-          <span class="ai-prog-label label-gpt">ChatGPT</span>
-          <div class="ai-prog-bar-outer"><div class="ai-prog-bar-inner bar-gpt" id="prog-bar-gpt"></div></div>
-          <span class="ai-prog-status" id="prog-stat-gpt">等待中</span>
-        </div>
-        <div class="ai-prog-row" id="prog-row-synth" style="display:none">
-          <span class="ai-prog-label label-synth">✨ 整合中</span>
-          <div class="ai-prog-bar-outer"><div class="ai-prog-bar-inner bar-synth" id="prog-bar-synth"></div></div>
-          <span class="ai-prog-status" id="prog-stat-synth">等待中</span>
-        </div>
-      </div>
-
-      <div class="status" id="statusMsg"></div>
-      <div class="fact-box" id="factBox"></div>
-    </div>
-  </div>
-
-  <!-- ═══════ 文稿雙欄 ═══════ -->
-  <div class="cols">
-
-    <!-- 致詞稿 -->
-    <div class="doc-p">
-      <div class="doc-hd">
-        <div>
-          <div class="doc-title">致詞稿 <span class="badge b-speech">SPEECH</span></div>
-          <div class="doc-ai-badges" id="speech-ai-badges"></div>
-        </div>
-        <div class="doc-tools">
-          <button class="ai-raw-toggle" onclick="toggleRaw('speech')" id="rawToggle-speech" style="display:none">📂 各版本</button>
-          <button class="tb" onclick="copyDoc('speech')">📋 複製</button>
-          <button class="tb" onclick="printDoc('speech')">🖨 列印</button>
-          <button class="tb" onclick="clearDoc('speech')">🗑 清除</button>
-        </div>
-      </div>
-      <!-- Raw AI versions drawer -->
-      <div class="ai-raw-drawer" id="rawDrawer-speech">
-        <div class="ai-raw-tabs" id="rawTabs-speech"></div>
-        <div class="ai-raw-content" id="rawContent-speech"></div>
-      </div>
-      <div id="speechDoc" class="doc-body ph" contenteditable="true">請填寫上方資料後，點擊「AI 產生文稿」。
-
-致詞稿輸出格式：
-
-致詞時間：115/05/11(日) 19:00　　地點：高雄市文化中心圓形廣場
-撰稿時間：115/04/09(四)10:00　　撰稿：○○○
-
-高雄市議會母親節活動「明華園戲劇總團演出《鴨母王》」議長致詞稿
-
-1. 明華園戲劇總團 陳勝福 總團長
-2. 玉皇宮 蘇千碩總幹事
-現場最偉大、最辛苦的媽媽們，各位議員、里長，大家晚安！
-
-● 開場白...
-● 主題論述...
-● 感謝贊助...
-● 結語祝福...</div>
-      <div class="doc-ft">
-        <span class="wc" id="speechWC">字數：0</span>
-        <button class="dl" id="speechDl" onclick="downloadDocx('speech')" disabled>⬇ 下載 .docx</button>
-      </div>
-    </div>
-
-    <!-- 新聞稿 -->
-    <div class="doc-p">
-      <div class="doc-hd">
-        <div>
-          <div class="doc-title">新聞稿 <span class="badge b-press">PRESS</span></div>
-          <div class="doc-ai-badges" id="press-ai-badges"></div>
-        </div>
-        <div class="doc-tools">
-          <button class="ai-raw-toggle" onclick="toggleRaw('press')" id="rawToggle-press" style="display:none">📂 各版本</button>
-          <button class="tb" onclick="copyDoc('press')">📋 複製</button>
-          <button class="tb" onclick="printDoc('press')">🖨 列印</button>
-          <button class="tb" onclick="clearDoc('press')">🗑 清除</button>
-        </div>
-      </div>
-      <div class="ai-raw-drawer" id="rawDrawer-press">
-        <div class="ai-raw-tabs" id="rawTabs-press"></div>
-        <div class="ai-raw-content" id="rawContent-press"></div>
-      </div>
-      <div id="pressDoc" class="doc-body ph" contenteditable="true">請填寫上方資料後，點擊「AI 產生文稿」。
-
-新聞稿輸出格式：
-
-明華園歌仔大戲閃耀高雄！康議長：用經典藝術禮讚慈母
-
-（高雄訊）為慶祝母親節並推廣傳統藝術，高雄市議會今（11）日晚於文化中心圓形廣場舉辦母親節活動...
-
-第一段：活動現況、致詞人引言...
-第二段：活動主角背景（參考致詞稿論點＋延伸搜尋）...
-第三段：感謝贊助協辦...
-第四段：展望與結語...</div>
-      <div class="doc-ft">
-        <span class="wc" id="pressWC">字數：0</span>
-        <button class="dl" id="pressDl" onclick="downloadDocx('press')" disabled>⬇ 下載 .docx</button>
-      </div>
-    </div>
-
-  </div>
-</div>
-
-<script>
-// ══════════════════════════════════════════════════════════
-//  STATE
-// ══════════════════════════════════════════════════════════
-let uploadedText = '';
-let gid = 0;
-let activeAIs = { claude: false, gemini: false, gpt: false };
-let synthMode = false;
-let rawVersions = { speech: {}, press: {} }; // { ai: text }
-
-// ══════════════════════════════════════════════════════════
-//  SETTINGS MODAL
-// ══════════════════════════════════════════════════════════
-function openSettings() {
-  document.getElementById('key-claude').value = ls('key_claude') || '';
-  document.getElementById('key-gemini').value = ls('key_gemini') || '';
-  document.getElementById('key-gpt').value    = ls('key_gpt')    || '';
-  updateKeyStatus('claude'); updateKeyStatus('gemini'); updateKeyStatus('gpt');
-  document.getElementById('settingsModal').classList.add('open');
-}
-function closeSettings() { document.getElementById('settingsModal').classList.remove('open'); }
-function saveSettings() {
-  const c = document.getElementById('key-claude').value.trim();
-  const g = document.getElementById('key-gemini').value.trim();
-  const p = document.getElementById('key-gpt').value.trim();
-  if (c) ls('key_claude', c); else lsDel('key_claude');
-  if (g) ls('key_gemini', g); else lsDel('key_gemini');
-  if (p) ls('key_gpt',    p); else lsDel('key_gpt');
-  // Reset activeAIs so refreshChipStates can auto-activate all newly keyed AIs
-  const prevActive = {...activeAIs};
-  activeAIs = { claude: false, gemini: false, gpt: false };
-  // Re-activate any that were previously active AND still have a key
-  ['claude','gemini','gpt'].forEach(ai => {
-    if (prevActive[ai] && !!ls('key_'+ai)) activeAIs[ai] = true;
-  });
-  refreshChipStates();
-  closeSettings();
-  const configured = ['claude','gemini','gpt'].filter(a=>!!ls('key_'+a));
-  const names = {claude:'Claude', gemini:'Gemini', gpt:'ChatGPT'};
-  setStatus('✓ 金鑰已儲存。可使用：' + configured.map(a=>names[a]).join('、'), 'ok');
-}
-function updateKeyStatus(ai) {
-  const key = ls('key_' + ai);
-  const inputEl = document.getElementById('key-' + ai);
-  const el  = document.getElementById('kstat-' + ai);
-  if (!el) return;
-  const val = inputEl ? inputEl.value.trim() : '';
-  if (key || val) { el.textContent = '已設定'; el.className = 'key-status key-ok'; }
-  else            { el.textContent = '未設定'; el.className = 'key-status key-no'; }
-}
-function ls(k, v) {
-  if (v === undefined) return localStorage.getItem(k);
-  localStorage.setItem(k, v);
-}
-function lsDel(k) { localStorage.removeItem(k); }
-
-// ══════════════════════════════════════════════════════════
-//  AI CHIP MANAGEMENT
-// ══════════════════════════════════════════════════════════
-function refreshChipStates() {
-  const aiList = ['claude', 'gemini', 'gpt'];
-  aiList.forEach(ai => {
-    const hasKey = !!ls('key_' + ai);
-    const chip = document.getElementById('chip-' + ai);
-    if (!hasKey) {
-      // No key: disable chip, grey out, cannot select
-      chip.classList.add('chip-disabled');
-      chip.classList.remove('active');
-      chip.classList.add('inactive');
-      activeAIs[ai] = false;
-    } else {
-      // Has key: enable chip, auto-activate
-      chip.classList.remove('chip-disabled');
-      chip.classList.remove('inactive');
-      // Only auto-activate on first load (activeAIs still all false)
-      // or if it was already active
-      if (!Object.values(activeAIs).some(Boolean) || activeAIs[ai]) {
-        activeAIs[ai] = true;
-        chip.classList.add('active');
-      }
-    }
-  });
-  // Safety: if somehow nothing active but keys exist, activate first with key
-  if (!Object.values(activeAIs).some(Boolean)) {
-    for (const ai of aiList) {
-      if (!!ls('key_' + ai)) {
-        activeAIs[ai] = true;
-        const chip = document.getElementById('chip-' + ai);
-        chip.classList.add('active');
-        chip.classList.remove('inactive');
-        chip.classList.remove('chip-disabled');
-        break;
-      }
-    }
-  }
-  // Disable synth if fewer than 2 active
-  const activeCount = Object.values(activeAIs).filter(Boolean).length;
-  if (activeCount < 2 && synthMode) {
-    synthMode = false;
-    document.getElementById('chip-synth').classList.remove('active');
-  }
-  updateModeHelp();
-}
-
-function toggleChip(ai) {
-  const chip = document.getElementById('chip-' + ai);
-  if (chip.classList.contains('chip-disabled')) return;
-  const willDeactivate = activeAIs[ai];
-  // Prevent deselecting if it's the only active one
-  if (willDeactivate && Object.values(activeAIs).filter(Boolean).length === 1) {
-    setStatus('⚠ 請至少保持一個 AI 模型被勾選。', 'err');
-    return;
-  }
-  activeAIs[ai] = !activeAIs[ai];
-  chip.classList.toggle('active', activeAIs[ai]);
-  chip.classList.toggle('inactive', !activeAIs[ai]);
-  // Auto-disable synth if fewer than 2 active
-  const activeCount = Object.values(activeAIs).filter(Boolean).length;
-  if (activeCount < 2 && synthMode) {
-    synthMode = false;
-    document.getElementById('chip-synth').classList.remove('active');
-    setStatus('ℹ 智能整合需要 2 個以上 AI，已自動取消。', 'warn');
-  }
-  updateModeHelp();
-}
-
-function toggleSynth() {
-  const activeCount = Object.values(activeAIs).filter(Boolean).length;
-  if (activeCount < 2 && !synthMode) {
-    setStatus('⚠ 請先勾選至少 2 個 AI 模型，才能啟用智能整合。', 'err');
-    // flash the hint
-    const el = document.getElementById('aiModeHelp');
-    el.style.color = 'rgba(255,150,150,.8)';
-    setTimeout(() => { el.style.color = ''; }, 2000);
-    return;
-  }
-  synthMode = !synthMode;
-  document.getElementById('chip-synth').classList.toggle('active', synthMode);
-  updateModeHelp();
-}
-
-function updateModeHelp() {
-  const selected = Object.entries(activeAIs).filter(([,v])=>v).map(([k])=>k);
-  const names = { claude:'Claude', gemini:'Gemini', gpt:'ChatGPT' };
-  // Show which AIs have keys configured
-  const configured = ['claude','gemini','gpt'].filter(a => !!ls('key_'+a));
-  const configured  = ['claude','gemini','gpt'].filter(a => !!ls('key_'+a));
-  const unconfigured = ['claude','gemini','gpt'].filter(a => !ls('key_'+a));
-  let txt = '';
-  if (configured.length === 0) {
-    txt = '⚠ 尚未設定任何 API 金鑰，請點右上角「⚙️ API 金鑰設定」輸入金鑰後即可使用';
-  } else {
-    txt = '✦ 可使用：' + configured.map(k=>names[k]).join('、');
-    if (selected.length) txt += '　｜　已勾選：' + selected.map(k=>names[k]).join(' ＋ ');
-    if (synthMode) txt += '　｜　✨ 智能整合：開啟';
-    if (unconfigured.length) txt += '　｜　未設定：' + unconfigured.map(k=>names[k]).join('、') + '（點右上角⚙️設定金鑰後可啟用）';
-  }
-  document.getElementById('aiModeHelp').textContent = txt;
-}
-
-// ══════════════════════════════════════════════════════════
-//  GUEST MANAGEMENT
-// ══════════════════════════════════════════════════════════
-function addGuest(title='', name='') {
-  gid++;
-  const id = gid;
-  const row = document.createElement('div');
-  row.className = 'g-row'; row.id = 'gr' + id;
-  row.innerHTML = `
-    <input type="text" placeholder="職稱（例：總團長）" value="${esc(title)}" class="g-title">
-    <input type="text" placeholder="姓名（例：陳勝福）"  value="${esc(name)}"  class="g-name">
-    <button class="del-btn" onclick="removeGuest(${id})">✕</button>`;
-  document.getElementById('guestList').appendChild(row);
-}
-function removeGuest(id) { const r=document.getElementById('gr'+id); if(r)r.remove(); }
-function getGuests() {
-  return [...document.querySelectorAll('.g-row')].map(r=>({
-    title: r.querySelector('.g-title').value.trim(),
-    name:  r.querySelector('.g-name').value.trim()
-  })).filter(g=>g.title||g.name);
-}
-function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;'); }
-addGuest();
-
-// ══════════════════════════════════════════════════════════
-//  FILE UPLOAD
-// ══════════════════════════════════════════════════════════
-const fi = document.getElementById('fi');
-const uploadZ = document.getElementById('uploadZ');
-fi.addEventListener('change', handleFiles);
-uploadZ.addEventListener('dragover', e=>{ e.preventDefault(); uploadZ.style.borderColor='var(--red)'; });
-uploadZ.addEventListener('dragleave', ()=>{ if(!uploadZ.classList.contains('ok')) uploadZ.style.borderColor='#ccc'; });
-uploadZ.addEventListener('drop', e=>{ e.preventDefault(); fi.files=e.dataTransfer.files; handleFiles(); });
-// uploaded image files stored separately for Vision API
-let uploadedImages = []; // [{name, base64, mimeType}]
-
-function getFileIcon(name) {
-  const ext = name.split('.').pop().toLowerCase();
-  const map = {docx:'📄',doc:'📄',xlsx:'📊',xls:'📊',pptx:'📑',ppt:'📑',
-               pdf:'📕',txt:'📝',jpg:'🖼',jpeg:'🖼',png:'🖼',gif:'🖼',webp:'🖼',bmp:'🖼'};
-  return map[ext] || '📎';
-}
-
-function addFilePreview(name, status='loading') {
-  const list = document.getElementById('filePreviewList');
-  const item = document.createElement('div');
-  item.className = 'file-preview-item';
-  item.id = 'fp-' + name.replace(/[^a-zA-Z0-9]/g,'_');
-  item.innerHTML = `<span class="file-preview-icon">${getFileIcon(name)}</span>
-    <span class="file-preview-name">${name}</span>
-    <span class="file-preview-status loading" id="fps-${name.replace(/[^a-zA-Z0-9]/g,'_')}">讀取中...</span>`;
-  list.appendChild(item);
-}
-function updateFilePreview(name, ok, msg='') {
-  const id = 'fps-' + name.replace(/[^a-zA-Z0-9]/g,'_');
-  const el = document.getElementById(id);
-  if(!el) return;
-  el.textContent = ok ? '✓ 已讀取' : ('✗ '+msg);
-  el.className = 'file-preview-status ' + (ok ? '' : 'err');
-}
-
-async function handleFiles() {
-  const files = fi.files; if(!files.length) return;
-  uploadZ.classList.add('ok');
-  document.getElementById('fileTag').textContent = `已選取 ${files.length} 個檔案`;
-  document.getElementById('filePreviewList').innerHTML = '';
-  uploadedText = '';
-  uploadedImages = [];
-
-  for(const f of files){
-    const name = f.name;
-    const ext = name.split('.').pop().toLowerCase();
-    addFilePreview(name);
-    try {
-      // ── 純文字 ──
-      if(ext === 'txt') {
-        uploadedText += '\n【文件：'+name+'】\n' + await f.text();
-        updateFilePreview(name, true);
-      }
-      // ── Word .docx ──
-      else if(ext === 'docx' || ext === 'doc') {
-        const ab = await f.arrayBuffer();
-        const r = await mammoth.extractRawText({arrayBuffer: ab});
-        uploadedText += '\n【Word文件：'+name+'】\n' + r.value;
-        updateFilePreview(name, true);
-      }
-      // ── Excel .xlsx / .xls ──
-      else if(ext === 'xlsx' || ext === 'xls') {
-        const ab = await f.arrayBuffer();
-        const wb = XLSX.read(ab, {type:'array'});
-        let excelText = '\n【Excel試算表：'+name+'】\n';
-        wb.SheetNames.forEach(sheetName => {
-          const ws = wb.Sheets[sheetName];
-          const csv = XLSX.utils.sheet_to_csv(ws, {blankrows: false});
-          if(csv.trim()) excelText += `[工作表：${sheetName}]\n${csv}\n`;
-        });
-        uploadedText += excelText;
-        updateFilePreview(name, true);
-      }
-      // ── PowerPoint .pptx ──
-      else if(ext === 'pptx' || ext === 'ppt') {
-        const ab = await f.arrayBuffer();
-        const zip = await JSZip.loadAsync(ab);
-        let pptText = '\n【PowerPoint簡報：'+name+'】\n';
-        const slideFiles = Object.keys(zip.files)
-          .filter(k => /^ppt\/slides\/slide\d+\.xml$/.test(k))
-          .sort((a,b) => {
-            const na = parseInt(a.match(/\d+/)?.[0]||0);
-            const nb = parseInt(b.match(/\d+/)?.[0]||0);
-            return na - nb;
-          });
-        for(let i=0; i<slideFiles.length; i++) {
-          const xml = await zip.files[slideFiles[i]].async('string');
-          // Extract text nodes from XML
-          const texts = [];
-          const matches = xml.matchAll(/<a:t[^>]*>([^<]+)<\/a:t>/g);
-          for(const m of matches) {
-            const t = m[1].trim();
-            if(t) texts.push(t);
-          }
-          if(texts.length) pptText += `[第${i+1}張投影片]\n${texts.join(' ')}\n`;
-        }
-        uploadedText += pptText;
-        updateFilePreview(name, true);
-      }
-      // ── PDF ── (send as image to Claude Vision)
-      else if(ext === 'pdf') {
-        const ab = await f.arrayBuffer();
-        const bytes = new Uint8Array(ab);
-        let binary = '';
-        bytes.forEach(b => binary += String.fromCharCode(b));
-        const base64 = btoa(binary);
-        uploadedImages.push({name, base64, mimeType:'application/pdf', type:'document'});
-        uploadedText += '\n【PDF文件：'+name+'（以圖像方式傳送給 AI 解讀）】';
-        updateFilePreview(name, true);
-      }
-      // ── 圖片：JPG, PNG, WEBP, GIF, BMP ──
-      else if(['jpg','jpeg','png','gif','webp','bmp'].includes(ext)) {
-        const mimeMap = {jpg:'image/jpeg',jpeg:'image/jpeg',png:'image/png',
-                         gif:'image/gif',webp:'image/webp',bmp:'image/bmp'};
-        const mime = mimeMap[ext] || 'image/jpeg';
-        const base64 = await new Promise((res,rej) => {
-          const reader = new FileReader();
-          reader.onload = e => res(e.target.result.split(',')[1]);
-          reader.onerror = rej;
-          reader.readAsDataURL(f);
-        });
-        uploadedImages.push({name, base64, mimeType: mime, type:'image'});
-        uploadedText += '\n【圖片：'+name+'（已上傳，AI 將以圖像方式解讀）】';
-        updateFilePreview(name, true);
-      }
-      else {
-        updateFilePreview(name, false, '不支援此格式');
-      }
-    } catch(e) {
-      updateFilePreview(name, false, e.message.slice(0,20));
-      uploadedText += '\n[無法讀取：'+name+']';
-    }
-  }
-}
-
-// ══════════════════════════════════════════════════════════
-//  STATUS
-// ══════════════════════════════════════════════════════════
-function setStatus(msg, type='ok'){
-  const el=document.getElementById('statusMsg');
-  el.textContent=msg; el.className='status show '+type;
-}
-
-// ══════════════════════════════════════════════════════════
-//  AI PROGRESS
-// ══════════════════════════════════════════════════════════
-function showProgress(ais, withSynth) {
-  const box = document.getElementById('aiProgressBox');
-  box.className = 'ai-progress-box show';
-  ['claude','gemini','gpt','synth'].forEach(a => {
-    const row = document.getElementById('prog-row-'+a);
-    row.style.display = (ais.includes(a) || (a==='synth'&&withSynth)) ? 'flex' : 'none';
-    setProgBar(a, 0, '等待中');
-  });
-}
-function hideProgress() { document.getElementById('aiProgressBox').className='ai-progress-box'; }
-function setProgBar(ai, pct, status) {
-  const bar  = document.getElementById('prog-bar-'+ai);
-  const stat = document.getElementById('prog-stat-'+ai);
-  if(bar)  bar.style.width  = pct + '%';
-  if(stat) stat.textContent = status;
-}
-
-// ══════════════════════════════════════════════════════════
-//  WORD COUNT / CLEAR / COPY / PRINT
-// ══════════════════════════════════════════════════════════
-function wc(type){
-  const el=document.getElementById(type==='speech'?'speechDoc':'pressDoc');
-  const n=el.innerText.replace(/[\s\n]/g,'').length;
-  document.getElementById(type==='speech'?'speechWC':'pressWC').textContent='字數：'+n.toLocaleString();
-}
-document.getElementById('speechDoc').addEventListener('input',()=>wc('speech'));
-document.getElementById('pressDoc').addEventListener('input',()=>wc('press'));
-
-function clearDoc(type){
-  const el=document.getElementById(type==='speech'?'speechDoc':'pressDoc');
-  const dl=document.getElementById(type==='speech'?'speechDl':'pressDl');
-  el.innerText=''; el.className='doc-body ph'; dl.disabled=true; wc(type);
-  document.getElementById('rawToggle-'+type).style.display='none';
-  document.getElementById('rawDrawer-'+type).className='ai-raw-drawer';
-  document.getElementById(type+'-ai-badges').innerHTML='';
-  rawVersions[type]={};
-}
-function clearAll(){
-  if(!confirm('確定清除所有已產生的文稿？')) return;
-  clearDoc('speech'); clearDoc('press');
-  document.getElementById('factBox').className='fact-box';
-  document.getElementById('factBtn').disabled=true;
-  setStatus('已清除。','ok');
-}
-function copyDoc(type){
-  const el=document.getElementById(type==='speech'?'speechDoc':'pressDoc');
-  navigator.clipboard.writeText(el.innerText).then(()=>setStatus('✓ 已複製','ok')).catch(()=>{
-    const r=document.createRange();r.selectNode(el);
-    window.getSelection().removeAllRanges();window.getSelection().addRange(r);
-    document.execCommand('copy');setStatus('✓ 已複製','ok');
-  });
-}
-function printDoc(type){
-  const el=document.getElementById(type==='speech'?'speechDoc':'pressDoc');
-  const w=window.open('','_blank');
-  w.document.write(`<!DOCTYPE html><html lang="zh-TW"><head><meta charset="UTF-8">
-    <title>${type==='speech'?'致詞稿':'新聞稿'}</title>
-    <style>@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;700&display=swap');
-    body{font-family:'Noto Serif TC',serif;font-size:14pt;line-height:2.2;padding:2.5cm;color:#111}
-    pre{white-space:pre-wrap;word-wrap:break-word}</style></head><body>
-    <pre>${el.innerText.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</pre></body></html>`);
-  w.document.close();w.focus();w.print();
-}
-
-// ══════════════════════════════════════════════════════════
-//  RAW VERSIONS DRAWER
-// ══════════════════════════════════════════════════════════
-function toggleRaw(docType) {
-  const drawer = document.getElementById('rawDrawer-'+docType);
-  drawer.classList.toggle('open');
-}
-function buildRawTabs(docType) {
-  const versions = rawVersions[docType];
-  const aiNames  = { claude:'Claude', gemini:'Gemini', gpt:'ChatGPT' };
-  const tabsEl   = document.getElementById('rawTabs-'+docType);
-  const contentEl= document.getElementById('rawContent-'+docType);
-  tabsEl.innerHTML = '';
-  const keys = Object.keys(versions);
-  if (!keys.length) return;
-  keys.forEach((ai, i) => {
-    const tab = document.createElement('div');
-    tab.className = 'ai-raw-tab' + (i===0?' active':'');
-    tab.textContent = aiNames[ai] || ai;
-    tab.onclick = () => {
-      tabsEl.querySelectorAll('.ai-raw-tab').forEach(t=>t.classList.remove('active'));
-      tab.classList.add('active');
-      contentEl.textContent = versions[ai];
-    };
-    tabsEl.appendChild(tab);
-  });
-  contentEl.textContent = versions[keys[0]];
-}
-function updateDocBadges(docType, aiList, isSynth) {
-  const el = document.getElementById(docType+'-ai-badges');
-  el.innerHTML = '';
-  if (isSynth) {
-    const b=document.createElement('span');
-    b.className='ai-source-badge asb-synth';b.textContent='✨ 多AI整合版';el.appendChild(b);
-  }
-  aiList.forEach(ai=>{
-    const b=document.createElement('span');
-    b.className='ai-source-badge asb-'+ai;
-    b.textContent={claude:'Claude',gemini:'Gemini',gpt:'ChatGPT'}[ai]||ai;
-    el.appendChild(b);
-  });
-}
-
-// ══════════════════════════════════════════════════════════
-//  PROMPT BUILDER
-// ══════════════════════════════════════════════════════════
-function buildPrompts() {
-  const vals = {
-    speechTime:   document.getElementById('speechTime').value.trim(),
-    location:     document.getElementById('location').value.trim(),
-    draftTime:    document.getElementById('draftTime').value.trim(),
-    drafter:      document.getElementById('drafter').value.trim(),
-    photographer: document.getElementById('photographer').value.trim(),
-    eventName:    document.getElementById('eventName').value.trim(),
-    eventType:    document.getElementById('eventType').value,
-    speakerTitle: document.getElementById('speakerTitle').value.trim(),
-    keyPoints:    document.getElementById('keyPoints').value.trim(),
-    background:   document.getElementById('background').value.trim(),
-  };
-  const guests = getGuests();
-  const guestLines = guests.length ? guests.map((g,i)=>`${i+1}. ${g.title}　${g.name}`).join('\n') : '（未填寫）';
-  const headerParts = [
-    vals.speechTime ? `致詞時間：${vals.speechTime}` : null,
-    vals.location   ? `地點：${vals.location}` : null,
-    vals.draftTime  ? `撰稿時間：${vals.draftTime}` : null,
-    vals.drafter    ? `撰稿：${vals.drafter}` : null,
-    vals.photographer ? `拍照：${vals.photographer}` : null,
-  ].filter(Boolean).join('\n');
-
-  const SYSTEM = `你是高雄市議會的資深公文撰寫助理，請依格式分別產出「致詞稿」與「新聞稿」，語言繁體中文。
-
-【致詞稿格式】
-（有填寫者輸出對應標頭，同行資訊以空四格分隔）
-致詞時間：___　　　地點：___
-撰稿時間：___　　　撰稿：___
-
-{活動完整標題}{致詞人職稱}致詞稿
-
-（逐條列出出席來賓）
-1. {職稱} {姓名}
-…
-（最後一行為適合場合的稱謂語）
-
-● {開場白：向來賓致意，說明活動緣起，約120字}
-● {主題詳述：活動內容，約180字}
-● {文化／歷史背景延伸，約180字}
-● {感謝贊助協辦，約80字}
-● {結語祝福，約80字}
-
-【新聞稿格式】
-{大標題：有力簡潔20字以內}
-
-（高雄訊）{導言：100字，5W原則，含現場概況}
-
-{第一段：活動現況、直接引用致詞人言論「」，約150字}
-
-{第二段：活動主角／議題深入背景，融合致詞稿論點＋搜尋延伸，約200字}
-
-{第三段：感謝協辦贊助、補充致詞人立場，約120字}
-
-{第四段：其他出席來賓、整體展望，約100字}
-
-輸出規則：
-1. 致詞稿在前，新聞稿在後
-2. 新聞稿參考致詞稿論點，並搜尋過去相關活動報導延伸豐富
-3. 使用分隔符：===致詞稿START=== … ===致詞稿END=== ===新聞稿START=== … ===新聞稿END===`;
-
-  const USER = `請搜尋「${vals.eventName||'高雄市議會活動'}」相關過去新聞報導及背景後，依據以下資訊產生致詞稿與新聞稿：
-
-${headerParts||'（標頭資訊未填）'}
-活動名稱：${vals.eventName||'（未填）'}
-活動類型：${vals.eventType}
-致詞人職稱：${vals.speakerTitle||'（未填）'}
-主要訴求：${vals.keyPoints||'（未填）'}
-補充背景：${vals.background||'（未填）'}
-
-出席來賓：
-${guestLines}
-
-上傳參考資料：
-${uploadedText?uploadedText.slice(0,3500):'（無）'}
-
-【寫作指引】新聞稿請搜尋本活動及過去相關活動報導延伸每段字數；新聞稿論點與致詞稿保持一致。`;
-
-  return { SYSTEM, USER, vals };
-}
-
-// ══════════════════════════════════════════════════════════
-//  PARSE AI RESPONSE
-// ══════════════════════════════════════════════════════════
-function parseResponse(text) {
-  const sm = text.match(/===致詞稿START===([\s\S]*?)===致詞稿END===/);
-  const pm = text.match(/===新聞稿START===([\s\S]*?)===新聞稿END===/);
-  return {
-    speech: sm ? sm[1].trim() : text,
-    press:  pm ? pm[1].trim() : ''
-  };
-}
-
-// ══════════════════════════════════════════════════════════
-//  CALL CLAUDE
-// ══════════════════════════════════════════════════════════
-async function callClaude(system, user) {
-  const key = ls('key_claude');
-  if (!key) throw new Error('Claude API 金鑰未設定，請點右上角「API 金鑰設定」輸入金鑰');
-
-  // Build message content: text + any uploaded images/PDFs
-  const userContent = [];
-  // Add uploaded image/PDF blocks (max 5 to avoid token overflow)
-  if (uploadedImages && uploadedImages.length) {
-    uploadedImages.slice(0, 5).forEach(img => {
-      if (img.type === 'document') {
-        userContent.push({
-          type: 'document',
-          source: { type: 'base64', media_type: img.mimeType, data: img.base64 }
-        });
-      } else {
-        userContent.push({
-          type: 'image',
-          source: { type: 'base64', media_type: img.mimeType, data: img.base64 }
-        });
-      }
-    });
-  }
-  userContent.push({ type: 'text', text: user });
-
-  const res = await fetch('/api/anthropic/v1/messages', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-api-key': key,
-      'anthropic-version': '2023-06-01',
-      'anthropic-dangerous-direct-browser-access': 'true'
-    },
-    body: JSON.stringify({
-      model: 'claude-sonnet-4-20250514',
-      max_tokens: 4096,
-      system,
-      tools: [{ type: 'web_search_20250305', name: 'web_search' }],
-      messages: [{ role: 'user', content: userContent }]
-    })
-  });
-  const data = await res.json();
-  if (data.error) throw new Error('Claude: ' + data.error.message);
-  return data.content.filter(b=>b.type==='text').map(b=>b.text).join('\n');
-}
-
-// ══════════════════════════════════════════════════════════
-//  CALL GEMINI
-// ══════════════════════════════════════════════════════════
-async function callGemini(system, user) {
-  const key = ls('key_gemini');
-  if (!key) throw new Error('Gemini API 金鑰未設定');
-  const parts = [];
-  // Add images for Gemini Vision
-  if (uploadedImages && uploadedImages.length) {
-    uploadedImages.slice(0, 5).forEach(img => {
-      if (img.type === 'image') {
-        parts.push({ inline_data: { mime_type: img.mimeType, data: img.base64 } });
-      }
-    });
-  }
-  parts.push({ text: system + '\n\n' + user });
-  const res = await fetch(`/api/gemini/v1beta/models/gemini-2.0-flash:generateContent?key=${key}`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      contents: [{ parts }],
-      generationConfig: { maxOutputTokens: 4096, temperature: 0.7 }
-    })
-  });
-  const data = await res.json();
-  if (data.error) throw new Error('Gemini: ' + data.error.message);
-  const resParts = data.candidates?.[0]?.content?.parts;
-  if (!resParts) throw new Error('Gemini: 回應格式錯誤');
-  return resParts.map(p=>p.text||'').join('\n');
-}
-
-// ══════════════════════════════════════════════════════════
-//  CALL CHATGPT
-// ══════════════════════════════════════════════════════════
-async function callGPT(system, user) {
-  const key = ls('key_gpt');
-  if (!key) throw new Error('ChatGPT API 金鑰未設定');
-  // Build user message content with images
-  let userMsg;
-  if (uploadedImages && uploadedImages.length > 0) {
-    userMsg = [{ type: 'text', text: user }];
-    uploadedImages.slice(0, 5).forEach(img => {
-      if (img.type === 'image') {
-        userMsg.push({
-          type: 'image_url',
-          image_url: { url: `data:${img.mimeType};base64,${img.base64}`, detail: 'high' }
-        });
-      }
-    });
-  } else {
-    userMsg = user;
-  }
-  const res = await fetch('/api/openai/v1/chat/completions', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + key },
-    body: JSON.stringify({
-      model: 'gpt-4o',
-      max_tokens: 4096,
-      messages: [
-        { role: 'system', content: system },
-        { role: 'user',   content: userMsg }
-      ]
-    })
-  });
-  const data = await res.json();
-  if (data.error) throw new Error('ChatGPT: ' + data.error.message);
-  return data.choices?.[0]?.message?.content || '';
-}
-
-// ══════════════════════════════════════════════════════════
-//  SYNTHESIZE (Claude as editor)
-// ══════════════════════════════════════════════════════════
-async function synthesize(versions, vals) {
-  const names = { claude:'Claude', gemini:'Gemini', gpt:'ChatGPT' };
-  let versionBlock = '';
-  Object.entries(versions).forEach(([ai, text]) => {
-    versionBlock += `\n\n══ ${names[ai]||ai} 版本 ══\n${text.slice(0, 3000)}`;
-  });
-
-  const synthSystem = '你是高雄市議會的資深主編，負責整合多 AI 文稿。';
-  const synthPrompt = `你是高雄市議會的資深主編，現在有多個 AI 各自產出的致詞稿與新聞稿版本。
-請整合各版本的優點：取最精確的資訊、最流暢的語句、最完整的段落，產出一份品質最高的最終版本。
-
-整合原則：
-1. 保留最準確、最具體的數據與事實
-2. 融合各版本中最精彩的段落與引述
-3. 確保致詞稿與新聞稿論點一致
-4. 維持格式規範（致詞稿：標頭→標題→來賓稱謂→●段落；新聞稿：標題→導言→各段）
-5. 輸出完整文稿，不可省略任何段落
-
-活動名稱：${vals.eventName||'（未填）'}
-
-各版本內容如下：${versionBlock}
-
-請輸出最終整合版，使用分隔符：
-===致詞稿START===
-（最終致詞稿）
-===致詞稿END===
-===新聞稿START===
-（最終新聞稿）
-===新聞稿END===`;
-
-  // Use Claude if available, otherwise fall back to Gemini or GPT
-  if (ls('key_claude')) {
-    return await callClaude(synthSystem, synthPrompt);
-  } else if (ls('key_gemini')) {
-    return await callGemini(synthSystem, synthPrompt);
-  } else if (ls('key_gpt')) {
-    return await callGPT(synthSystem, synthPrompt);
-  } else {
-    throw new Error('無可用的 AI 金鑰進行整合');
-  }
-}
-
-// ══════════════════════════════════════════════════════════
-//  MAIN GENERATE
-// ══════════════════════════════════════════════════════════
-async function generate() {
-  const selectedAIs = Object.entries(activeAIs).filter(([,v])=>v).map(([k])=>k);
-  if (!selectedAIs.length) { setStatus('⚠ 請選擇至少一個 AI 模型', 'err'); return; }
-
-  const genBtn = document.getElementById('genBtn');
-  genBtn.disabled = true;
-  genBtn.innerHTML = '<div class="spin" style="width:15px;height:15px;border-width:2px;display:inline-block;margin-right:4px"></div> 產生中...';
-
-  const { SYSTEM, USER, vals } = buildPrompts();
-  const sEl = document.getElementById('speechDoc');
-  const pEl = document.getElementById('pressDoc');
-  sEl.innerHTML = '<div class="ld"><div class="spin"></div><p>AI 撰寫致詞稿中...</p></div>';
-  pEl.innerHTML = '<div class="ld"><div class="spin"></div><p>AI 撰寫新聞稿中...</p></div>';
-  sEl.className = 'doc-body'; pEl.className = 'doc-body';
-
-  showProgress(selectedAIs, synthMode);
-  setStatus(`🤖 ${selectedAIs.map(a=>({claude:'Claude',gemini:'Gemini',gpt:'ChatGPT'}[a])).join(' ＋ ')} 正在撰寫文稿，請稍候...`, 'warn');
-
-  rawVersions = { speech: {}, press: {} };
-  const allVersions = {}; // { ai: fullText }
-  const callers = { claude: callClaude, gemini: callGemini, gpt: callGPT };
-
-  // Call all selected AIs in parallel
-  const tasks = selectedAIs.map(async (ai) => {
-    setProgBar(ai, 20, '撰寫中...');
-    try {
-      const text = await callers[ai](SYSTEM, USER);
-      setProgBar(ai, 90, '完成 ✓');
-      allVersions[ai] = text;
-      const parsed = parseResponse(text);
-      rawVersions.speech[ai] = parsed.speech;
-      rawVersions.press[ai]  = parsed.press;
-    } catch(e) {
-      setProgBar(ai, 100, '失敗 ✗');
-      allVersions[ai] = null;
-      console.error(e);
-    }
-  });
-
-  await Promise.all(tasks);
-
-  // Check we got at least one result
-  const succeeded = selectedAIs.filter(ai => allVersions[ai]);
-  if (!succeeded.length) {
-    sEl.innerText = '所有 AI 均產生失敗，請檢查 API 金鑰或網路。';
-    sEl.className = 'doc-body ph'; pEl.innerText = '請重試。'; pEl.className = 'doc-body ph';
-    setStatus('✗ 所有 AI 均失敗，請檢查設定。', 'err');
-    genBtn.disabled = false; genBtn.innerHTML = '✦ AI 產生文稿';
-    hideProgress(); return;
-  }
-
-  let finalSpeech = '', finalPress = '';
-  let isSynth = false;
-
-  if (synthMode && succeeded.length >= 2) {
-    // Synthesize
-    setProgBar('synth', 20, '整合中...');
-    document.getElementById('prog-row-synth').style.display = 'flex';
-    const validVersions = {};
-    succeeded.forEach(ai => { validVersions[ai] = allVersions[ai]; });
-    try {
-      const synthText = await synthesize(validVersions, vals);
-      setProgBar('synth', 100, '完成 ✓');
-      const parsed = parseResponse(synthText);
-      finalSpeech = parsed.speech;
-      finalPress  = parsed.press;
-      isSynth = true;
-    } catch(e) {
-      setProgBar('synth', 100, '失敗，使用第一版本');
-      const first = succeeded[0];
-      const parsed = parseResponse(allVersions[first]);
-      finalSpeech = parsed.speech;
-      finalPress  = parsed.press;
-    }
-  } else {
-    // Use first succeeded (or only one)
-    const first = succeeded[0];
-    const parsed = parseResponse(allVersions[first]);
-    finalSpeech = parsed.speech;
-    finalPress  = parsed.press;
-  }
-
-  // Update progress bars to 100
-  succeeded.forEach(ai => setProgBar(ai, 100, '完成 ✓'));
-
-  sEl.innerText = finalSpeech || '（致詞稿未能解析）';
-  pEl.innerText = finalPress  || '（新聞稿未能解析）';
-  sEl.className = 'doc-body'; sEl.contentEditable = 'true';
-  pEl.className = 'doc-body'; pEl.contentEditable = 'true';
-
-  wc('speech'); wc('press');
-  document.getElementById('speechDl').disabled = false;
-  document.getElementById('pressDl').disabled  = false;
-  document.getElementById('factBtn').disabled  = false;
-
-  // Show raw tabs if multiple AIs
-  if (succeeded.length > 1 || isSynth) {
-    buildRawTabs('speech');
-    buildRawTabs('press');
-    document.getElementById('rawToggle-speech').style.display = 'flex';
-    document.getElementById('rawToggle-press').style.display  = 'flex';
-  }
-  updateDocBadges('speech', succeeded, isSynth);
-  updateDocBadges('press',  succeeded, isSynth);
-
-  const aiNamesStr = succeeded.map(a=>({claude:'Claude',gemini:'Gemini',gpt:'ChatGPT'}[a])).join('、');
-  setStatus(`✓ 文稿產生完成！來源：${aiNamesStr}${isSynth?' → ✨ 智能整合':''}。可直接編輯後下載 .docx。`, 'ok');
-  genBtn.disabled = false; genBtn.innerHTML = '✦ AI 產生文稿';
-  setTimeout(hideProgress, 2000);
-}
-
-// ══════════════════════════════════════════════════════════
-//  FACT CHECK
-// ══════════════════════════════════════════════════════════
-async function factCheck() {
-  const speech = document.getElementById('speechDoc').innerText.trim();
-  const press  = document.getElementById('pressDoc').innerText.trim();
-  if (!speech && !press) { setStatus('⚠ 請先產生文稿', 'err'); return; }
-
-  const factBtn = document.getElementById('factBtn');
-  factBtn.disabled = true;
-  factBtn.innerHTML = '<div class="spin" style="width:13px;height:13px;border-width:2px;display:inline-block;margin-right:4px"></div> 查核中...';
-  setStatus('🔍 正在查核人名、職稱、時間、地點、數字...', 'warn');
-  document.getElementById('factBox').className = 'fact-box';
-
-  try {
-    const claudeKey = ls('key_claude');
-    if (!claudeKey) throw new Error('Claude API 金鑰未設定，請點右上角設定');
-    const res = await fetch('/api/anthropic/v1/messages', {
-      method: 'POST', headers: { 'Content-Type': 'application/json', 'x-api-key': claudeKey, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514', max_tokens: 2048,
-        tools: [{ type: 'web_search_20250305', name: 'web_search' }],
-        messages: [{ role: 'user', content:
-`請仔細閱讀以下致詞稿與新聞稿，主動上網搜尋後進行完整事實查核。
-
-查核項目：
-1. 人名與職稱是否正確（組織職銜、個人身分）
-2. 組織名稱、創立年份、歷史背景是否正確
-3. 數字（年份、金額、統計）是否正確
-4. 時間、地點名稱是否正確
-5. 引述語句是否合理
-6. 任何模糊或可能有誤的陳述
-
-請以以下格式輸出：
-
-━━━━━━━━━━━━━━━━━━━━━━
-【事實查核報告】
-━━━━━━━━━━━━━━━━━━━━━━
-✅ 確認正確
-（每條一行）
-
-⚠️ 需注意／無法確認
-（列出疑慮及原因）
-
-❌ 發現錯誤
-（列出錯誤並提供正確資訊）
-
-【修改建議】
-━━━━━━━━━━━━━━━━━━━━━━
-
----致詞稿---
-${speech.slice(0,3000)}
-
----新聞稿---
-${press.slice(0,3000)}`
-        }]
-      })
-    });
-    const data = await res.json();
-    if (data.error) throw new Error(data.error.message);
-    const result = data.content.filter(b=>b.type==='text').map(b=>b.text).join('\n');
-    const fb = document.getElementById('factBox');
-    fb.textContent = result; fb.className = 'fact-box show';
-    setStatus('✓ 事實查核完成，詳見下方報告。', 'ok');
-  } catch(e) { setStatus('✗ 查核失敗：'+e.message, 'err'); }
-  factBtn.disabled = false; factBtn.innerHTML = '🔍 事實查核';
+    let result='';
+    if(ls('key_claude'))      result = await callClaude('你是專業事實查核員。',prompt);
+    else if(ls('key_gemini')) result = await callGemini('你是專業事實查核員。',prompt);
+    else if(ls('key_gpt'))    result = await callGPT('你是專業事實查核員。',prompt);
+    else throw new Error('請先設定至少一個 AI 金鑰');
+    const fb=document.getElementById('factBox');
+    fb.textContent=result; fb.className='fact-box show';
+    setStatus('✓ 事實查核完成。','ok');
+  } catch(e){ setStatus('✗ 查核失敗：'+e.message,'err'); }
+  factBtn.disabled=false; factBtn.innerHTML='🔍 事實查核';
 }
 
 // ══════════════════════════════════════════════════════════
@@ -2961,13 +1291,6 @@ ${paragraphs}
 window.addEventListener('click', e => {
   if (e.target === document.getElementById('settingsModal')) closeSettings();
 });
-
-// Live update key status as user types in settings modal
-['claude','gemini','gpt'].forEach(ai => {
-  const input = document.getElementById('key-' + ai);
-  if (input) input.addEventListener('input', () => updateKeyStatus(ai));
-});
-
 refreshChipStates();
 </script>
 </body>
